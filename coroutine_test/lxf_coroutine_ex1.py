@@ -1,3 +1,4 @@
+#http://blog.csdn.net/dollyh/article/details/72611820
 def consumer():
     r = ''
     while True:
