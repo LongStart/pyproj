@@ -1,0 +1,22 @@
+{
+    "targetpath" : "D:\\stmproj\\SeerDIOBoard\\src",
+    "targetfile" :
+    [
+        "SonicModbus.cpp",
+        "SonicModbus.h",
+        "SonicModbusTask.cpp",
+        "SonicModbusTask.h"
+    ],
+    "targettext":
+    {
+        "Battery" : "Sonic",
+        "Batt" : "Sonic",
+        "battery" : "sonic",
+        "batt" : "sonic",
+        "BATTERY" : "SONIC",
+        "BATT" : "SONIC"
+    }
+}
+
+
+
