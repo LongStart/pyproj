@@ -14,13 +14,15 @@ async def my_coroutine():
 
 async def print_ro():
 	while True:
-		await asyncio.sleep(0.5)
 		print('################')
 		sys.stdout.flush()
+		await asyncio.sleep(0.1)
+
 
 coroutine = my_coroutine()
 co2 = print_ro()
 loop = asyncio.get_event_loop()
-task = [asyncio.ensure_future(coroutine), asyncio.ensure_future(co2)]
+#task = [asyncio.ensure_future(coroutine), asyncio.ensure_future(co2)]
+task = [asyncio.ensure_future(co2),asyncio.ensure_future(coroutine) ]
 loop.run_until_complete(asyncio.wait(task))
 
