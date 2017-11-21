@@ -1,0 +1,19 @@
+{
+    "targetpath" : "D:\\stmproj\\F1canBootLoader\\iap",
+    "targetfile" :
+    [
+        "uart5IapDevice.cpp",
+        "uart5IapDevice.h"
+    ],
+    "targettext":
+    {
+        "Uart" : "Uart5",
+        "uart" : "uart5",
+        "Usart" : "Usart5",
+        "UART" : "UART5",
+        "USART" : "USART5"
+    }
+}
+
+
+
