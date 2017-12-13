@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*
 import os
+import serial
 try:
-    import serial
+    from serial import *
 except AttributeError:
-    os.system("pip install serial")
+    print('no serial module found, install now...')
+    os.system("pip install pyserial")
 import serial.tools.list_ports
 
 plist = list(serial.tools.list_ports.comports())

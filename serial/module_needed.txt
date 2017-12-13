@@ -1,2 +1,2 @@
-pip install serial
+pip uninstall serial
 pip install pyserial
