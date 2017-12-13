@@ -14,7 +14,12 @@ plist = list(serial.tools.list_ports.comports())
 if len(plist) <= 0:
     print ("The Serial port can't find!")
 else:
-    plist_0 =list(plist[0])
-    serialName = plist_0[0]
-    serialFd = serial.Serial(serialName,9600,timeout = 60)
-    print ("check which port was really used >",serialFd.name)
+	for dev in plist:
+		com_name = list(dev)[0]
+		try:
+			com_temp = serial.Serial(com_name)
+		except SerialException:
+			print(com_name + ' used')
+		else:
+			com_temp.close()
+			print(com_name)

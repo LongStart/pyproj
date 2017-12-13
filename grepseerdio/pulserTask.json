@@ -1,0 +1,19 @@
+{
+    "targetpath" : "C:\\engineering\\stmproj\\temp",
+    "targetfile" :
+    [
+        "PulseDirLiftBelt.cpp",
+        "PulseDirLiftBelt.h",
+		"PulseDirLiftBeltTask.cpp",
+        "PulseDirLiftBeltTask.h"
+    ],
+    "targettext":
+    {
+        "BatteryModbus" : "PulseDirLiftBelt",
+        "batteryModbus" : "pulseDirLiftBelt",
+        "BATTERY_MODBUS" : "PULSEDIR_LIFTBELT"
+    }
+}
+
+
+

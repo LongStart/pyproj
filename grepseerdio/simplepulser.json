@@ -1,0 +1,16 @@
+{
+    "targetpath" : "C:\\engineering\\stmproj\\temp",
+    "targetfile" :
+    [
+        "SimplePulser.cpp",
+        "SimplePulser.h"
+    ],
+    "targettext":
+    {
+        "RFIDHinson" : "SimplePulser",
+        "RFIDHINSON" : "SIMPLE_PULSER"
+    }
+}
+
+
+
