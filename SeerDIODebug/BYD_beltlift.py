@@ -36,12 +36,17 @@ def inputexecute():
     loop = True
     while(loop):
         try:
-            str_height = input('input height: ')
+            str_height_mm = input('input height(mm): ')
         except KeyboardInterrupt:
             loop = False
             str_height = '0'
 
-        height = float(str_height)
+        try:
+            height = float(str_height_mm) / 1000.0
+        except ValueError:
+            print('What???')
+            continue
+
         liftbelt(height)
 
 
@@ -97,9 +102,9 @@ def continuecali():
         print('cnt num = %d' % cnt)
 
 
-# lanchtask()
+lanchtask()
 # multistarttest()
 # looptest()
-# inputexecute()
+inputexecute()
 # increamentcountmove()
-continuecali()
+# continuecali()

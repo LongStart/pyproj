@@ -3,6 +3,7 @@ from serial import *
 import sys
 import time
 import os
+import threading
 
 if(len(sys.argv) < 2):
     print("No input COM port, example: python.exe intboardpowermonitor.py COM5")
@@ -34,8 +35,9 @@ try:
 except FileExistsError:
     pass
 
-log_file_name = '.\\log\\powerlog_' + time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + '.log'
-file_out = open(log_file_name,'w' )
+log_file_name = '.\\log\\powerlog_' + \
+    time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime()) + '.log'
+file_out = open(log_file_name, 'w')
 
 # file_out.write('Intboard power monitor start...\n')
 # file_out.write('Logfile name: ' + 'log_file_name\n')
@@ -43,12 +45,19 @@ file_out = open(log_file_name,'w' )
 
 file_out.close()
 
+
 def loginfo(info):
-    file_out = open(log_file_name,'a' )
+    file_out = open(log_file_name, 'a')
     info = '[' + time.ctime() + ']' + info
     file_out.write(info + '\n')
     file_out.close()
     print(info)
+
+
+def daemonthreadfunc():
+    loginfo('Main thread killed...')
+    time.sleep(1)
+
 
 loginfo('Intboard power monitor start...\n')
 loginfo('Logfile name: ' + log_file_name + '\n')
@@ -61,18 +70,15 @@ while(True):
     except KeyboardInterrupt:
         loginfo('Monitor closed')
         break
-    
+
     if(cmd == b''):
         loginfo('Heart beat broken!')
         continue
 
-
-    logstr = 'Raw command: 0x' + hex(cmd[0]).replace('0x','').zfill(2) + ' - ' + cmddict[cmd[0]] 
+    logstr = 'Raw command: 0x' + \
+        hex(cmd[0]).replace('0x', '').zfill(2) + ' - ' + cmddict[cmd[0]]
     loginfo(logstr)
 
-    
 
 # file_out.close()
 com.close()
-
-
