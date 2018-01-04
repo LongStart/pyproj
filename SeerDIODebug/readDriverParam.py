@@ -126,7 +126,7 @@ class CRLDriverConfiger(object):
     def __init__(self):
         self._so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._so.settimeout(0.01)
-        print('init socket')
+        print('Init driver configer, version 1.0.0')
         try:
             self._so.sendto(b'', ('', 123456))
         except:
@@ -287,7 +287,7 @@ class CRLDriverConfiger(object):
         f = open(filename, 'w')
         f.write(driverconfig)
         f.close()
-        print('Backup previous config file:' + filename)
+        print('Backup previous config file: ' + filename)
 
     def downloaddriverconfig(self, configfile):
         targetdict = json.load(open(configfile, 'r'))
@@ -310,6 +310,7 @@ class CRLDriverConfiger(object):
 configer = CRLDriverConfiger()
 versionpass = configer.confirmgatewayversion()
 if not versionpass:
+    input('press enter to exit...')
     quit()
 mailboxaddr = configer.addsingleIDlistenmailbox()
 configer.readdriverobjectdict()
@@ -317,3 +318,4 @@ if(len(sys.argv) > 1):
     configfilename = sys.argv[1]
     configer.downloaddriverconfig(configfilename)
 configer.deletelistenmailbox(mailboxaddr)
+input('Operate finished, press enter to exit...')
