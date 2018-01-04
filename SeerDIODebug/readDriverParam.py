@@ -125,7 +125,7 @@ class CRLDriverConfiger(object):
 
     def __init__(self):
         self._so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._so.settimeout(0.01)
+        self._so.settimeout(0.05)
         print('Init driver configer, version 1.0.0')
         try:
             self._so.sendto(b'', ('', 123456))
@@ -185,14 +185,20 @@ class CRLDriverConfiger(object):
         SUBCOMMAND = 2
         param = mailboxaddr
         rawmsg = struct.pack('<3I', PACK_HEAD, SUBCOMMAND, param)
+
+        self.clearreadbuffer()
         self._so.sendto(rawmsg, self._F4KAddress)
 
         try:
             (data, remoteaddr) = self._so.recvfrom(1024)
         except socket.timeout:
             return -1
+        try:
+            (head, subcmd, ret) = struct.unpack('<3I', data)
+        except struct.error:
+            traceback.print_exc()
+            print('data = ' + str(data))
 
-        (head, subcmd, ret) = struct.unpack('<3I', data)
         if(head != PACK_HEAD):
             print('pack head mismatch')
         if (subcmd != SUBCOMMAND):
@@ -280,6 +286,8 @@ class CRLDriverConfiger(object):
             value = self.querydrivervalue(
                 objectdict[key]['idx'], objectdict[key]['type'])
             objectdict[key]['value'] = value
+            if('f' == objectdict[key]['type']):
+                objectdict[key]['value'] = round(value, 6)
 
         driverconfig = json.dumps(objectdict, indent=4, ensure_ascii=False)
         filename = './Driverconfig_' + \
