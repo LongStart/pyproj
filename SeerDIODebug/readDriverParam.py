@@ -4,6 +4,7 @@ import socket
 import json
 import time
 import sys
+import traceback
 
 # grep ^(..)\n(.*):('.')\n(.*)\n(.*)
 # grep '$2':{'idx': 0x$1, 'type': $3, 'ref': '$4', 'ret': '$5'},
@@ -131,6 +132,28 @@ class CRLDriverConfiger(object):
         except:
             pass
 
+    def confirmgatewayversion(self):
+        PACK_HEAD = 0x00001032
+        SUBCOMMAND = 0
+        self._so.sendto(struct.pack('<2I', PACK_HEAD,
+                                    SUBCOMMAND), self._F4KAddress)
+        try:
+            (data, remoteaddr) = self._so.recvfrom(1024)
+        except socket.timeout:
+            print('Cannot get version...')
+            return False
+
+        (head, v0, v1, v2) = struct.unpack('<4I', data)
+        if(head != PACK_HEAD):
+            print('Get gateway version pack head error: ' + str(head))
+            return False
+        if(v0 < 1 or v1 < 7 or v2 < 905):
+            print(
+                'Gateway version require at least 1.7.905, current: %d.%d.%d' % (v0, v1, v2))
+            return False
+        print('Gateway version confirm passed')
+        return True
+
     def addsingleIDlistenmailbox(self):
         PACK_HEAD = 0x0000104C
         SUBCOMMAND = 1
@@ -156,6 +179,28 @@ class CRLDriverConfiger(object):
             print('subcmd mismatch')
 
         return mailboxaddr
+
+    def deletelistenmailbox(self, mailboxaddr):
+        PACK_HEAD = 0x0000104C
+        SUBCOMMAND = 2
+        param = mailboxaddr
+        rawmsg = struct.pack('<3I', PACK_HEAD, SUBCOMMAND, param)
+        self._so.sendto(rawmsg, self._F4KAddress)
+
+        try:
+            (data, remoteaddr) = self._so.recvfrom(1024)
+        except socket.timeout:
+            return -1
+
+        (head, subcmd, ret) = struct.unpack('<3I', data)
+        if(head != PACK_HEAD):
+            print('pack head mismatch')
+        if (subcmd != SUBCOMMAND):
+            print('subcmd mismatch')
+
+        if ret != 0:
+            print('ret = ' + str(ret))
+        return ret
 
     def senddrivercmd(self, cmdtype, valueindex, paramtype, value=0):
         PACK_HEAD = 0x00001017
@@ -183,11 +228,7 @@ class CRLDriverConfiger(object):
         self._so.sendto(rawmsg, self._F4KAddress)
 
     def getdriverreturnvalue(self, paramtype='I'):
-        try:
-            (data, remoteaddr) = self._so.recvfrom(1024)
-        except socket.timeout:
-            print('timeout111')
-            return
+        (data, remoteaddr) = self._so.recvfrom(1024)
 
         (msgId, pbdata) = struct.unpack('<I' + str(len(data) - 4) + 's', data)
         if(0x00001019 == msgId):
@@ -205,14 +246,26 @@ class CRLDriverConfiger(object):
             return value
 
     def querydrivervalue(self, valueindex, paramtype):
-        self.clearreadbuffer()
-        self.senddrivercmd('r', valueindex, paramtype)
-        return self.getdriverreturnvalue(paramtype)
+        while True:
+            self.clearreadbuffer()
+            self.senddrivercmd('r', valueindex, paramtype)
+            try:
+                ret = self.getdriverreturnvalue(paramtype)
+            except socket.timeout:
+                continue
+            finally:
+                return ret
 
     def writedrivervalue(self, valueindex, paramtype, value):
-        self.clearreadbuffer()
-        self.senddrivercmd('w', valueindex, paramtype, value)
-        return self.getdriverreturnvalue()
+        while True:
+            self.clearreadbuffer()
+            self.senddrivercmd('w', valueindex, paramtype, value)
+            try:
+                ret = self.getdriverreturnvalue()
+            except socket.timeout:
+                continue
+            finally:
+                return ret
 
     def clearreadbuffer(self):
         while True:
@@ -243,8 +296,8 @@ class CRLDriverConfiger(object):
             valueindex = targetdict[key]['idx']
             paramtype = targetdict[key]['type']
             value = targetdict[key]['value']
-            self.writedrivervalue(valueindex, paramtype, value)
-            ret = self.getdriverreturnvalue()
+
+            ret = self.writedrivervalue(valueindex, paramtype, value)
             if ret != 0:
                 print('return value error:' + str(ret))
         self.senddrivercmd('s', 0x01, 'I', 0)
@@ -255,8 +308,12 @@ class CRLDriverConfiger(object):
 
 
 configer = CRLDriverConfiger()
-configer.addsingleIDlistenmailbox()
+versionpass = configer.confirmgatewayversion()
+if not versionpass:
+    quit()
+mailboxaddr = configer.addsingleIDlistenmailbox()
 configer.readdriverobjectdict()
 if(len(sys.argv) > 1):
     configfilename = sys.argv[1]
     configer.downloaddriverconfig(configfilename)
+configer.deletelistenmailbox(mailboxaddr)
