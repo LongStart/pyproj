@@ -258,8 +258,10 @@ class CRLDriverConfiger(object):
             try:
                 ret = self.getdriverreturnvalue(paramtype)
             except socket.timeout:
+                print('Driver no response, retry...')
+                time.sleep(1)
                 continue
-            finally:
+            else:
                 return ret
 
     def writedrivervalue(self, valueindex, paramtype, value):
@@ -269,8 +271,10 @@ class CRLDriverConfiger(object):
             try:
                 ret = self.getdriverreturnvalue()
             except socket.timeout:
+                print('Driver no response, retry...')
+                time.sleep(1)
                 continue
-            finally:
+            else:
                 return ret
 
     def clearreadbuffer(self):
@@ -282,13 +286,17 @@ class CRLDriverConfiger(object):
 
     def readdriverobjectdict(self):
         global objectdict
+        print('Read driver configuration...')
         for key in objectdict:
             value = self.querydrivervalue(
                 objectdict[key]['idx'], objectdict[key]['type'])
             objectdict[key]['value'] = value
             if('f' == objectdict[key]['type']):
                 objectdict[key]['value'] = round(value, 6)
+            sys.stdout.write('.')
+            sys.stdout.flush()
 
+        print('')
         driverconfig = json.dumps(objectdict, indent=4, ensure_ascii=False)
         filename = './Driverconfig_' + \
             time.ctime().replace(' ', '_').replace(':', '_') + '.json'
@@ -299,6 +307,7 @@ class CRLDriverConfiger(object):
 
     def downloaddriverconfig(self, configfile):
         targetdict = json.load(open(configfile, 'r'))
+        print('Download config file...')
 
         for key in targetdict:
             valueindex = targetdict[key]['idx']
@@ -306,8 +315,11 @@ class CRLDriverConfiger(object):
             value = targetdict[key]['value']
 
             ret = self.writedrivervalue(valueindex, paramtype, value)
+            sys.stdout.write('.')
+            sys.stdout.flush()
             if ret != 0:
                 print('return value error:' + str(ret))
+        print('')
         self.senddrivercmd('s', 0x01, 'I', 0)
         time.sleep(1)
         ret = self.getdriverreturnvalue()
