@@ -1,0 +1,13 @@
+============ fast test =========
+
+1. python generate a pair of private key and public key.
+2. python encrypt the plaintxt with the *pub* key and save to cipher.txt
+3. copy the private key to polarssl/debug
+4. polarssl decrypt the cipher.txt and compare with plaintxt
+
+============ actual usage ======
+
+1. python generate a pair of private key and public key.
+2. python encrypt the plaintxt with the *private* key and save to cipher.txt
+3. copy the public key to polarssl/debug
+4. polarssl decrypt the cipher.txt and compare with plaintxt
