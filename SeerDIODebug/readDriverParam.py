@@ -186,26 +186,39 @@ class CRLDriverConfiger(object):
         param = mailboxaddr
         rawmsg = struct.pack('<3I', PACK_HEAD, SUBCOMMAND, param)
 
-        self.clearreadbuffer()
-        self._so.sendto(rawmsg, self._F4KAddress)
+        ret = 1
 
-        try:
-            (data, remoteaddr) = self._so.recvfrom(1024)
-        except socket.timeout:
-            return -1
-        try:
-            (head, subcmd, ret) = struct.unpack('<3I', data)
-        except struct.error:
-            traceback.print_exc()
-            print('data = ' + str(data))
+        while True:
 
-        if(head != PACK_HEAD):
-            print('pack head mismatch')
-        if (subcmd != SUBCOMMAND):
-            print('subcmd mismatch')
+            self.clearreadbuffer()
+            self._so.sendto(rawmsg, self._F4KAddress)
 
-        if ret != 0:
-            print('ret = ' + str(ret))
+            try:
+                (data, remoteaddr) = self._so.recvfrom(1024)
+            except socket.timeout:
+                continue
+
+            try:
+                (head, subcmd, ret) = struct.unpack('<3I', data)
+            except struct.error:
+                # traceback.print_exc()
+                # print('data = ' + str(data))
+                # print('Retry...')
+                continue
+
+            if(head != PACK_HEAD):
+                print('pack head mismatch')
+                continue
+            if (subcmd != SUBCOMMAND):
+                print('subcmd mismatch')
+                continue
+
+            if ret != 0:
+                print('ret = ' + str(ret))
+                continue
+            else:
+                break
+
         return ret
 
     def senddrivercmd(self, cmdtype, valueindex, paramtype, value=0):
@@ -234,7 +247,10 @@ class CRLDriverConfiger(object):
         self._so.sendto(rawmsg, self._F4KAddress)
 
     def getdriverreturnvalue(self, paramtype='I'):
-        (data, remoteaddr) = self._so.recvfrom(1024)
+        try:
+            (data, remoteaddr) = self._so.recvfrom(1024)
+        except socket.timeout:
+            return
 
         (msgId, pbdata) = struct.unpack('<I' + str(len(data) - 4) + 's', data)
         if(0x00001019 == msgId):
@@ -262,7 +278,10 @@ class CRLDriverConfiger(object):
                 time.sleep(1)
                 continue
             else:
-                return ret
+                if(ret is None):
+                    continue
+                else:
+                    return ret
 
     def writedrivervalue(self, valueindex, paramtype, value):
         while True:

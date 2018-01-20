@@ -4,9 +4,14 @@ import matplotlib.pyplot as plt
 
 instr = vxi11.Instrument("192.168.192.88")
 print(instr.ask("*IDN?"))
+# print(instr.ask(':WAV:STAT?'))
 instr.write(':STOP')
+instr.write(':ACQ:MDEP 700000')
+print(instr.ask(':ACQ:MDEP?'))
 instr.write(':WAV:SOUR CHAN1')
 instr.write(':WAV:MODE RAW')
+# print(instr.ask(':WAV:MODE?'))
+
 instr.write(':WAV:FORM WORD')
 instr.write(':WAV:STAR 1')
 instr.write(':WAV:STOP 125000')
