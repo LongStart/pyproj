@@ -87,7 +87,7 @@ def getodomthreadfunc():
 
 def sendspeed(vx):
     chassisCmd = message_navigation_pb2.Message_NavSpeed()
-    chassisCmd.x = vx
+    chassisCmd.x = 0
     chassisCmd.y = 0
     chassisCmd.rotate = 0.0
     chassisCmd.steer_angle = 0.0

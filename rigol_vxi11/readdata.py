@@ -3,6 +3,7 @@ import struct
 import matplotlib.pyplot as plt
 
 instr = vxi11.Instrument("192.168.192.88")
+
 print(instr.ask("*IDN?"))
 # print(instr.ask(':WAV:STAT?'))
 instr.write(':STOP')
