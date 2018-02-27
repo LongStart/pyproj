@@ -5,6 +5,7 @@ import json
 import time
 import sys
 import traceback
+import os
 
 # grep ^(..)\n(.*):('.')\n(.*)\n(.*)
 # grep '$2':{'idx': 0x$1, 'type': $3, 'ref': '$4', 'ret': '$5'},
@@ -317,8 +318,13 @@ class CRLDriverConfiger(object):
 
         print('')
         driverconfig = json.dumps(objectdict, indent=4, ensure_ascii=False)
-        filename = './Driverconfig_' + \
-            time.ctime().replace(' ', '_').replace(':', '_') + '.json'
+        foldername = 'configbackup'
+        try:
+            os.mkdir('./' + foldername)
+        except FileExistsError:
+            pass
+        filename = './' + foldername +'/Driverconfig_' + \
+            time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime()) + '.json'
         f = open(filename, 'w')
         f.write(driverconfig)
         f.close()

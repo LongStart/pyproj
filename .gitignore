@@ -108,3 +108,4 @@ grepseerdio/*.json
 
 SeerDIODebug/*.json
 rigol_vxi11/*.txt
+/SeerDIODebug/configbackup/
