@@ -1,8 +1,15 @@
 import json
 import matplotlib.pyplot as plt
 from math import *
+import sys
 
-filename = '/home/ad/chenxx/road_json/road_0807.json'
+if(len(sys.argv) != 2):
+    print("Please input json file path!")
+    print("Example: python3 plot_road_json.py /home/ad/chenxx/road_json/road_0807.json")
+    quit()
+
+filename = sys.argv[1]
+print(filename)
 file = open(filename, 'r')
 filedata = file.read()
 file.close()
@@ -29,8 +36,8 @@ for p in dictdata["road"]:
     x_temp = x0
     y_temp = y0
     for w in p["widths"]:
-        x_temp += -w[1]*sin(heading)
-        y_temp += w[1]*cos(heading)
+        x_temp += w[1]*sin(heading)
+        y_temp += -w[1]*cos(heading)
         x += [x_temp - x_start]
         y += [y_temp - y_start]
         
