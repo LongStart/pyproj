@@ -2,6 +2,7 @@ import json
 import matplotlib.pyplot as plt
 from math import *
 import sys
+from json_road_dict_parser import *
 
 if(len(sys.argv) != 2):
     print("Please input json file path!")
@@ -16,34 +17,21 @@ file.close()
 
 dictdata = json.loads(filedata)
 
-x = []
-y = []
 
-r_x = []
-r_y = []
+parser_lib = {
+    "1.0.2":parser_1_0_3,
+    "1.0.3":parser_1_0_3, 
+    "1.0.4":parser_1_0_4}
 
-x_start = float(dictdata["road"][0]['refP'][0])
-y_start = float(dictdata["road"][0]['refP'][1])
-
-for p in dictdata["road"]:
-    x0 = float(p['refP'][0])
-    y0 = float(p['refP'][1])
-    r_x += [x0 - x_start]
-    r_y += [y0 - y_start]
-
-    heading = float(p['heading'])
-    
-    x_temp = x0
-    y_temp = y0
-    for w in p["widths"]:
-        x_temp += w[1]*sin(heading)
-        y_temp += -w[1]*cos(heading)
-        x += [x_temp - x_start]
-        y += [y_temp - y_start]
+try:
+    (r_x, r_y, x, y) = parser_lib[dictdata["version"]](dictdata)
+except KeyError:
+    print('unsupport file version: ' + dictdata["version"])
+    quit()
         
 
 plt.plot(x,y,'.')
-plt.plot(r_x,r_y,'.')
+plt.plot(r_x,r_y,'o',markersize=1.5)
 plt.axis('equal')
 plt.show()
 
