@@ -19,9 +19,9 @@ dictdata = json.loads(filedata)
 
 
 parser_lib = {
-    "1.0.2":parser_1_0_3,
-    "1.0.3":parser_1_0_3, 
-    "1.0.4":parser_1_0_4}
+    "1.0.1":parser_1_0_2,
+    "1.0.2":parser_1_0_2,
+    "1.0.3":parser_1_0_3}
 
 try:
     (r_x, r_y, x, y) = parser_lib[dictdata["version"]](dictdata)

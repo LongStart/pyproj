@@ -1,6 +1,6 @@
 from math import *
 
-def parser_1_0_3(dictdata):
+def parser_1_0_2(dictdata):
     x = []
     y = []
 
@@ -34,7 +34,7 @@ def parser_1_0_3(dictdata):
 
     return (r_x,r_y,x,y)
 
-def parser_1_0_4(dictdata):
+def parser_1_0_3(dictdata):
     x = []
     y = []
 
