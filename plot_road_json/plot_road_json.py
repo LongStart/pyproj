@@ -28,7 +28,8 @@ try:
 except KeyError:
     print('unsupport file version: ' + dictdata["version"])
     quit()
-        
+
+print('json road version: ' + dictdata["version"])        
 
 plt.plot(x,y,'.')
 plt.plot(r_x,r_y,'o',markersize=1.5)
