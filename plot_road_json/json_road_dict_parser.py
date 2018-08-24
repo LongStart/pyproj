@@ -34,7 +34,7 @@ def parser_1_0_2(dictdata):
 
     return (r_x,r_y,x,y)
 
-def parser_1_0_3(dictdata):
+def parser_1_0_3(dictdata, top_tag="road"):
     x = []
     y = []
 
@@ -42,15 +42,14 @@ def parser_1_0_3(dictdata):
     r_y = []
 
     remove_offset = False
-
-    x_start = float(dictdata["road"][0]['refP'][0])
-    y_start = float(dictdata["road"][0]['refP'][1])
+    x_start = float(dictdata[top_tag][0]['refP'][0])
+    y_start = float(dictdata[top_tag][0]['refP'][1])
 
     if False == remove_offset :
         x_start = 0
         y_start = 0
 
-    for p in dictdata["road"]:
+    for p in dictdata[top_tag]:
         x0 = float(p['refP'][0])
         y0 = float(p['refP'][1])
         r_x += [x0 - x_start]
@@ -65,4 +64,5 @@ def parser_1_0_3(dictdata):
             y += [y_temp - y_start]
     
     return (r_x,r_y,x,y)
+
 

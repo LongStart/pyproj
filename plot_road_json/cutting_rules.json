@@ -1,0 +1,16 @@
+{
+    "json_road_file":"20180821_194959_road.json",
+    "rules":
+    [
+        {"begin":-1.4,"end":42, "lanemarkings":3},
+        {"begin":47.134,"end":213.781, "lanemarkings":3},
+        {"begin":260,"end":551.8, "lanemarkings":4},
+        {"begin":578,"end":1598, "lanemarkings":3},
+        {"begin":1604,"end":1703, "lanemarkings":4},
+        {"begin":1768,"end":1954.47, "lanemarkings":4},
+        {"begin":1954.47,"end":2144.17, "lanemarkings":3},
+        {"begin":2144.17,"end":2260.63, "lanemarkings":4},
+        {"begin":2313.23,"end":2391.73, "lanemarkings":4},
+        {"begin":2392.84,"end":2661.55, "lanemarkings":3}
+    ]
+}
