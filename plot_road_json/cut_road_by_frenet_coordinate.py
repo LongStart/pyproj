@@ -48,19 +48,21 @@ for p in road_dictdata["road"]:
         continue
 
     if(rule_dictdata["rules"][rule_idx]["end"] < s):
-        print('finish a section')
+        print('finish section: ' + str(rule_idx))
         road_sections["sections"] += [road_section]
         road_section = copy.deepcopy(empty_road_section)
-        print(empty_road_section)
+        
         rule_idx += 1
+        
         if(rule_idx >= len(rule_dictdata["rules"])):
+            print("rule_idx: " + str(rule_idx))
             break
         continue
 
     road_section["segments"] += [p]
     road_section["lanemarkings"] = rule_dictdata["rules"][rule_idx]["lanemarkings"]
 
-# print(road_sections)
+road_sections["sections"] += [road_section]
 file = open('output.json','w')
 json.dump(road_sections, file, indent=4 )
 file.close()
