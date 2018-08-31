@@ -15,10 +15,10 @@ file.close()
 dictdata = json.loads(filedata)
 
 points = []
-for section in dictdata["road"]:
-    for width in section["widths"]:
-        if(width[1] != 0):
-            points += [[width[1]]]
+for section in dictdata["roads"][3]["segments"]:
+    for lanemarking_offset in section["offsets"]:
+        if(lanemarking_offset["offset"] != 0):
+            points += [[lanemarking_offset["offset"]]]
 
 point_dict = {"points":points}
 

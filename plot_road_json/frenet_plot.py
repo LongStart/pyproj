@@ -16,24 +16,31 @@ def frenet_parser_1_0_3(dictdata):
     r_y = []
 
     s = 0
-    prev_r_x = float(dictdata["road"][0]['refP'][0])
-    prev_r_y = float(dictdata["road"][0]['refP'][1])
+    prev_ref_x = dictdata["segments"][0]['refPoint']["x"]
+    prev_ref_y = dictdata["segments"][0]['refPoint']["y"]
     
-    for p in dictdata["road"]:
-        x0 = s
-        y0 = 0
+    count = 0
+    for p in dictdata["segments"]:
+        curr_ref_x = p['refPoint']['x']
+        curr_ref_y = p['refPoint']['y']
 
-        s += distance(prev_r_x, prev_r_y, float(p['refP'][0]), float(p['refP'][1]))
+        s += distance(prev_ref_x, prev_ref_y, curr_ref_x, curr_ref_y)
 
-        r_x += [x0]
-        r_y += [y0]
+        curr_ref_x_frenet = s
+        curr_ref_y_frenet = 0
 
-        prev_r_x = p['refP'][0]
-        prev_r_y = p['refP'][1]
-        
-        for w in p["widths"]:
-            x_temp = x0
-            y_temp = y0 - w[1]
+        r_x += [curr_ref_x_frenet]
+        r_y += [curr_ref_y_frenet]
+
+        prev_ref_x = curr_ref_x
+        prev_ref_y = curr_ref_y
+
+        # print('curr_ref_x_frenet: ' + str(curr_ref_x_frenet) + ', idx: ' + str(count))
+        # count += 1
+        # input()    
+        for w in p["offsets"]:
+            x_temp = curr_ref_x_frenet
+            y_temp = curr_ref_y_frenet - w['offset']
             x += [x_temp]
             y += [y_temp]
     
@@ -54,7 +61,7 @@ dictdata = json.loads(filedata)
 
 (r_x, r_y, x, y) = frenet_parser_1_0_3(dictdata)
 
-print('json road version: ' + dictdata["version"])        
+# print('json road version: ' + dictdata["version"])        
 
 plt.plot(x,y,'.')
 plt.plot(r_x,r_y,'o',markersize=1.5)
