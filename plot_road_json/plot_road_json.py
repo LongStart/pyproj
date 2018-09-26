@@ -32,7 +32,7 @@ except KeyError:
 print('json road version: ' + dictdata["version"])        
 
 plt.plot(x,y,'.')
-plt.plot(r_x,r_y,'o',markersize=1.5)
+plt.plot(r_x,r_y,'x')#,markersize=1.5)
 plt.axis('equal')
 plt.show()
 
