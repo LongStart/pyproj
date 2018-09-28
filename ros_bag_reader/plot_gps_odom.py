@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import json
 from math import *
 
-odom_file_name = "data/0830_bag_odometry.json"
+odom_file_name = "build/0830_bag_odometry.json"
 gps_file_name = "data/0830_bag_utm_gps_out.json"
 
 odom_x = []
