@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import json
 from math import *
+from loc_file_to_list import *
 
 odom_file_name = "build/0830_bag_odometry.json"
 gps_file_name = "data/0830_bag_utm_gps_out.json"
+loc_file_name = "../../cppproj/ros_test/bag_tf_extraction/build/output_pose.txt"
 
 odom_x = []
 odom_y = []
@@ -34,8 +36,11 @@ for position in gps_dict['positions']:
     gps_x += [x*cos(a) - y*sin(a)]
     gps_y += [x*sin(a) + y*cos(a)]
 
+loc_x, loc_y = loc_file_to_list(loc_file_name, 0.67)
+
 plt.plot(odom_x, odom_y)
 plt.plot(gps_x, gps_y, '.-')
+plt.plot(loc_x, loc_y, )
 plt.axis('equal')
 plt.show()
 
