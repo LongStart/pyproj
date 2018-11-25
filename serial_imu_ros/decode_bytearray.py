@@ -31,7 +31,7 @@ def decode_from_buffer(raw_msg):
     frame_end_byte = 0xaa
 
     if(len(raw_msg) != raw_msg[0]):
-        print("length mismatch")
+        print("length mismatch, actual length: {0}, get: {1}".format(len(raw_msg), raw_msg[0]))
         return None
 
     if(raw_msg[-1] != frame_end_byte):
@@ -39,7 +39,7 @@ def decode_from_buffer(raw_msg):
         return None
 
     if(imu_check_sum(raw_msg[:-2]) != raw_msg[-2]):
-        print("sum check faild, should be: 0x{:x}, get: 0x{:x}".format(imu_check_sum(raw_msg), raw_msg[-2]))
+        print("sum check faild, should be: 0x{:x}, get: 0x{:x}".format(imu_check_sum(raw_msg[:-2]), raw_msg[-2]))
         return None
 
     if(raw_msg[1] == adc_frame_type_id):
@@ -48,6 +48,7 @@ def decode_from_buffer(raw_msg):
         # print([v for v in raw_msg])
         return decode_euler_angle(raw_msg[2:-2])
     else:
+        print('unknow type')
         return None
 
     
