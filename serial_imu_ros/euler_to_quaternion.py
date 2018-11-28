@@ -6,7 +6,7 @@ def euler_to_quaternion(yaw, pitch, roll):
     roll = roll /180. * pi
 
     yaw *= -1.
-    pitch *= -1.
+    roll *= -1.
 
     cy = cos(yaw * 0.5)
     sy = sin(yaw * 0.5)

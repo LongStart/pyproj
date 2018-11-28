@@ -41,6 +41,8 @@ while(True):
         buffer = buffer[buffer[2] + 2:]
         if(3 == len(pack)):
             pub_pose.publish(encode_ros_pose(pack))
+            pub_euler.publish(encode_ros_euler(pack))
+            
 
     try:
         cmd = com.read(1)
