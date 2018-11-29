@@ -21,7 +21,7 @@ for bag_path in bags:
     pos_y = []
     bag = rosbag.Bag(bag_path)
     section = {"positions":[]}
-    for topic, msg, t in bag.read_messages(topics=['/vehicle/seriesGPS']):
+    for topic, msg, t in bag.read_messages(topics=['/vehicle/seriesGPSraw']):
         gps_poses += [msg]
         section["positions"] += [{"latitude":msg.latitude, "longitude": msg.longitude}]
     bag.close()

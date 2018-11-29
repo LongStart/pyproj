@@ -19,13 +19,14 @@ for bag_path in bags:
     pos_x = []
     pos_y = []
     bag = rosbag.Bag(bag_path)
-    for topic, msg, t in bag.read_messages(topics=['/vehicle/seriesGPS']):
+    for topic, msg, t in bag.read_messages(topics=['/vehicle/seriesGPSout']):
         gps_poses += [msg]
         pos_x += [msg.latitude]
         pos_y += [msg.longitude]
     bag.close()
     plt.plot(pos_x, pos_y, 'o-')
     print(".")
+    sys.stdout.flush()
 
 
 plt.axis('equal')
