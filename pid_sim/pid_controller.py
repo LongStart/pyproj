@@ -1,7 +1,7 @@
 from math import *
 class PIDController:
     """ single PID controller """
-    def __init__(self, p, i, d, dead_band):
+    def __init__(self, p, i, d, dead_band, limit):
         self.kp = p
         self.ki = i
         self.kd = d
@@ -9,6 +9,7 @@ class PIDController:
         self.output = 0.
         self.prev_error = 0.
         self.prev_d_error = 0.
+        self.limit = limit
 
     def update(self, actual, desire):
         curr_error = desire - actual
@@ -19,6 +20,12 @@ class PIDController:
         
         if(abs(curr_error) > self.dead_band):
             self.output += (out_p + out_i + out_d)
+
+        if self.output > self.limit[1]:
+            self.output = self.limit[1]
+        
+        if self.output < self.limit[0]:
+            self.output = self.limit[0]
 
         self.prev_error = curr_error
         self.prev_d_error = curr_d_error

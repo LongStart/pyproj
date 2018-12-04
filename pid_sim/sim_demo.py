@@ -1,8 +1,14 @@
 import matplotlib.pyplot as plt
+import matplotlib
 from math import *
 from simple_system import SimpleSystem
 from pid_controller import PIDController
 from signal_generator import PWMGenerator
+
+
+font_name = "Microsoft YaHei"
+matplotlib.rcParams['font.family']=font_name
+matplotlib.rcParams['axes.unicode_minus']=False # in case minus sign is shown as box
 
 t = []
 y = []
@@ -10,7 +16,7 @@ x = []
 t_step_len = 1e-2
 sim_time = 5.
 system = SimpleSystem(t_step_len)
-controller = PIDController(200, 50, 500, 0.05)
+controller = PIDController(200, 50, 500, 0.05, (-500,500))
 pwm = PWMGenerator(t_step_len, 2, .5)
 
 ts = 0.
@@ -28,6 +34,7 @@ while ts < sim_time:
     control = controller.update(observe, desire_val)
     system.update(control)
     desire_val = -3.878 + 15 * pwm.update()
+    # desire_val = 10 + 0 * pwm.update()
     
     ts += t_step_len
 
