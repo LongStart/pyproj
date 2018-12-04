@@ -8,7 +8,7 @@ x1 = []
 y1 = []
 x2 = []
 y2 = []
-filepath = '2018_12_01.txt'  
+filepath = 'pf_loc_2018_12_01.txt'  
 with open(filepath) as fp:  
     for line in fp:
         (xx1, yy1, xx2, yy2) = line.split()
@@ -21,10 +21,10 @@ with open(filepath) as fp:
 
 plt.plot(x1, y1, '-.')
 plt.plot(x2, y2, '.')
-plt.ylabel('航向角 (°)')
-plt.xlabel('时间 (s)')
-plt.title('航向角控制')
+plt.ylabel('纵坐标(米)')
+plt.xlabel('横坐标 (米)')
+plt.title('定位跟踪轨迹')
 plt.grid(True)
-plt.legend(('航向角','俯仰角'))
+plt.legend(('真实轨迹','定位轨迹'))
 plt.axis('equal')
 plt.show()
