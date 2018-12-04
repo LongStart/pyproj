@@ -33,7 +33,7 @@ while ts < sim_time:
     observe /= float(sample_time)
     control = controller.update(observe, desire_val)
     system.update(control)
-    desire_val = -3.878 + 15 * pwm.update()
+    desire_val = -7.5 + 15 * pwm.update()
     # desire_val = 10 + 0 * pwm.update()
     
     ts += t_step_len
