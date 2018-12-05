@@ -20,8 +20,8 @@ with open(filepath) as fp:
         pitchs += [float(pitch)]
         rolls += [float(roll)]
         ts += [t]
-
            
+
 
 plt.plot(ts, yaws,'-')
 plt.plot(ts, pitchs,'--')
