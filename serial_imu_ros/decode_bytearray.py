@@ -6,7 +6,7 @@ def decode_raw_adc_data(data_field):
     return mid_data
 
 def decode_encoder_sensor_data(data_field):
-    encoder_sensor_format_string = '>h'
+    encoder_sensor_format_string = '<H'
     mid_data = struct.unpack(encoder_sensor_format_string, data_field)
     return mid_data
 
@@ -33,7 +33,7 @@ def imu_check_sum(target_msg):
 def decode_from_buffer(raw_msg):
     adc_frame_type_id = 0xa2
     rpy_frame_type_id = 0xa1
-    rpy_frame_type_id = 0xa8
+    encoder_sensor_frame_type_id = 0xa8
     frame_end_byte = 0xaa
 
     if(len(raw_msg) != raw_msg[0]):
@@ -54,7 +54,7 @@ def decode_from_buffer(raw_msg):
     elif(type_id == rpy_frame_type_id):
         # print([v for v in raw_msg])
         return decode_euler_angle(raw_msg[2:-2])
-    elif(type_id == rpy_frame_type_id):
+    elif(type_id == encoder_sensor_frame_type_id):
         return decode_encoder_sensor_data(raw_msg[2:-2])
     else:
         print('unknown type id: 0x{:x}'.format(type_id))

@@ -52,7 +52,7 @@ while(True):
 
     if(cmd == b''):
         print('No message received!')
-        buffer.clear()
+        buffer = bytearray(b'')
         continue
 
     buffer += cmd

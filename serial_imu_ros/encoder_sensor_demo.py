@@ -7,6 +7,8 @@ import os
 import threading
 import tf
 from decode_bytearray import *
+from geometry_msgs.msg import Vector3Stamped
+from ros_sensor_encoder import *
 
 if(len(sys.argv) < 2):
     print("No input COM port, example: python3 encoder_sensor_demo.py COM5")
@@ -14,12 +16,13 @@ if(len(sys.argv) < 2):
     quit()
 com_name = sys.argv[1]
 
-com = serial.Serial(com_name, baudrate=115200, timeout=1)
+com = serial.Serial(com_name, baudrate=115200, timeout=.05)
 
-pub_encoder = rospy.Publisher('encoder_sensor_puber', Vector3, queue_size=10)
+pub_encoder = rospy.Publisher('encoder_sensor_puber', Vector3Stamped, queue_size=10)
 rospy.init_node('encoder_sensor_msg_converter', anonymous=True)
 
 buffer = bytearray(b'')
+prev_pack = ()
 
 while(True):
     cmd = b''
@@ -28,7 +31,9 @@ while(True):
         pack = decode_from_buffer(buffer[2:2+buffer[2]])
         buffer = buffer[buffer[2] + 2:]
         if(1 == len(pack)):
-            pub_encoder.publish(encode_encoder_sensor(pack))
+            # print(pack[0])
+            pub_encoder.publish(encode_encoder_sensor(pack, 500, 0))
+            prev_pack = pack
 
     try:
         cmd = com.read(1)
@@ -37,8 +42,10 @@ while(True):
         break
 
     if(cmd == b''):
-        print('No message received!')
-        buffer.clear()
+        
+        buffer = bytearray(b'')
+        if(len(prev_pack) > 0):
+            pub_encoder.publish(encode_encoder_sensor(prev_pack, 500, 0))
         continue
 
     buffer += cmd
