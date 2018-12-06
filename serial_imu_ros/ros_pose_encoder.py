@@ -1,6 +1,6 @@
 from euler_to_quaternion import euler_to_quaternion
 from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3Stamped
 import rospy
 
 def encode_ros_pose(ypr_1_10_degree):
@@ -25,9 +25,12 @@ def encode_ros_euler(ypr_1_10_degree):
     pitch = ypr_1_10_degree[1]
     roll  = ypr_1_10_degree[2]
 
-    euler_vec = Vector3()
-    euler_vec.x = yaw
-    euler_vec.y = pitch
-    euler_vec.z = roll
+    euler_vec = Vector3Stamped()
+    euler_vec.vector.x = yaw
+    euler_vec.vector.y = pitch
+    euler_vec.vector.z = roll
+
+    euler_vec.header.frame_id = "local_frame"
+    euler_vec.header.stamp = rospy.get_rostime()
     
     return euler_vec
