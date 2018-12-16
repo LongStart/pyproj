@@ -15,16 +15,14 @@ def calc_g(x):
 
 g = calc_g(x)
 g_prev = g
-
 d = -H * g
-
 lam = np.asscalar(-(g.transpose()*d)/(d.transpose() * A * d))
 x = x + lam * d
 
-print('x:')
+print('x[1]:')
 print(x)
 
-for i in range(1,3):
+for i in range(2,3):
     print('===========i: {}==========='.format(i))
     print('g:')
     print(g)
