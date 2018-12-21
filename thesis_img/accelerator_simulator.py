@@ -21,7 +21,8 @@ plt.plot(ts, thetas, linewidth=0.5)
 
 plt.ylabel('角度 (°)')
 plt.xlabel('时间 (s)')
-# plt.title('90°往复摆动')
+plt.xlim(13,32)
+plt.ylim(0,82)
 plt.grid(True)
-# plt.legend(('航向角','俯仰角'))
+
 plt.show()
