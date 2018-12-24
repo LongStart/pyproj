@@ -8,6 +8,7 @@ import threading
 import tf
 from decode_bytearray import *
 from geometry_msgs.msg import Vector3Stamped
+from sensor_msgs.msg import Imu
 from ros_sensor_encoder import *
 
 if(len(sys.argv) < 2):
@@ -19,10 +20,12 @@ com_name = sys.argv[1]
 com = serial.Serial(com_name, baudrate=115200, timeout=.05)
 
 pub_encoder = rospy.Publisher('encoder_sensor_puber', Vector3Stamped, queue_size=10)
+pub_angle_velocity = rospy.Publisher('encoder_sensor_angle_velocity_puber', Vector3Stamped, queue_size=10)
 rospy.init_node('encoder_sensor_msg_converter', anonymous=True)
 
 buffer = bytearray(b'')
 prev_pack = ()
+prev_encoder_msg = Vector3Stamped()
 
 while(True):
     cmd = b''
@@ -31,9 +34,15 @@ while(True):
         pack = decode_from_buffer(buffer[2:2+buffer[2]])
         buffer = buffer[buffer[2] + 2:]
         if(1 == len(pack)):
-            # print(pack[0])
-            pub_encoder.publish(encode_encoder_sensor(pack, 500, 0))
-            prev_pack = pack
+            # encoder_msg = encode_encoder_sensor(pack, 500, 0)
+            encoder_msg = encode_encoder_sensor_rad(pack, 500, 0)
+            angle_velocity_msg = encode_encoder_angle_velocity(encoder_msg, prev_encoder_msg)
+
+            pub_encoder.publish(encoder_msg)
+
+            if(angle_velocity_msg != None):
+                pub_angle_velocity.publish(angle_velocity_msg)
+                prev_encoder_msg = encoder_msg
 
     try:
         cmd = com.read(1)

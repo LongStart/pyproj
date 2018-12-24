@@ -1,10 +1,5 @@
 import struct
 
-def decode_raw_adc_data(data_field):
-    raw_adc_format_string = '>9h'
-    mid_data = struct.unpack(raw_adc_format_string, data_field)
-    return mid_data
-
 def decode_encoder_sensor_data(data_field):
     encoder_sensor_format_string = '<H'
     mid_data = struct.unpack(encoder_sensor_format_string, data_field)
@@ -26,6 +21,17 @@ def decode_euler_angle(data_field):
     pitch = strange_convert(mid_data[1])
     roll = strange_convert(mid_data[2])
     return (yaw, pitch, roll)
+
+def decode_raw_adc_data(data_field):
+    raw_adc_format_string = '>9h'
+    mid_data = struct.unpack(raw_adc_format_string, data_field)
+    ax = strange_convert(mid_data[0])
+    ay = strange_convert(mid_data[1])
+    az = strange_convert(mid_data[2])
+    gx = strange_convert(mid_data[3])
+    gy = strange_convert(mid_data[4])
+    gz = strange_convert(mid_data[5])
+    return (ax,ay,ax,gx,gy,gz)
 
 def imu_check_sum(target_msg):
     return sum(target_msg) & 0xff

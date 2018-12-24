@@ -9,6 +9,7 @@ import tf
 from decode_bytearray import *
 from geometry_msgs.msg import Vector3Stamped
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import Imu
 from calibration_server import *
 from ros_pose_encoder import *
 from calibration_service_test.srv import *
@@ -26,8 +27,9 @@ def handle_calibration_l(req):
     com.write(calibration_commd)
     return CalibrationResponse(56)
 
-pub_euler = rospy.Publisher('euler_puber', Vector3Stamped, queue_size=10)
-pub_pose = rospy.Publisher('pose_puber', PoseStamped, queue_size=10)
+pub_euler = rospy.Publisher('euler_puber', Vector3Stamped, queue_size=30)
+pub_pose = rospy.Publisher('pose_puber', PoseStamped, queue_size=30)
+pub_imu = rospy.Publisher('imu_puber', Imu, queue_size=30)
 server_calib = rospy.Service('calibrate_imu', Calibration, handle_calibration_l)
 rospy.init_node('imu_msg_converter', anonymous=True)
 
@@ -41,7 +43,12 @@ while(True):
         buffer = buffer[buffer[2] + 2:]
         if(3 == len(pack)):
             pub_pose.publish(encode_ros_pose(pack))
-            pub_euler.publish(encode_ros_euler(pack))
+            pub_euler.publish(encode_ros_euler_rad(pack))
+
+        elif(6 == len(pack)):
+            pub_imu.publish(encode_imu_msg(pack))
+        else:
+            print(pack)
             
 
     try:

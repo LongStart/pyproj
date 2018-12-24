@@ -21,8 +21,8 @@ plt.plot(ts, thetas, linewidth=0.5)
 
 plt.ylabel('角度 (°)')
 plt.xlabel('时间 (s)')
-plt.xlim(13,32)
-plt.ylim(0,82)
+plt.xlim(13, 32)
+plt.ylim(0, 82)
 plt.grid(True)
 
 plt.show()
