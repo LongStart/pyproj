@@ -30,10 +30,12 @@ for topic, msg, t in bag.read_messages(topics=['/encoder_sensor_puber']):
 for topic, msg, t in bag.read_messages(topics=['/euler_puber']):
     imu_data += [msg.vector.y]
     imu_t += [t.to_sec()]
-    f_imu.write("{} {}\n".format(t.to_sec(), msg.vector.y))
+    f_imu.write("{} {} {} {}\n".format(t.to_sec(), msg.vector.x, msg.vector.y, msg.vector.z))
 
 for topic, msg, t in bag.read_messages(topics=['/imu_puber']):
-    f_gyro_acc_adc.write("{} {} {} {}\n".format(t.to_sec(), msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z))
+    f_gyro_acc_adc.write("{} {} {} {} {} {} {}\n".format(t.to_sec(), 
+        msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z,
+        msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z))
 
 f_encoder.close()
 f_imu.close()

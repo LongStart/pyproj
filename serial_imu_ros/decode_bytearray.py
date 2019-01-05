@@ -31,7 +31,7 @@ def decode_raw_adc_data(data_field):
     gx = strange_convert(mid_data[3])
     gy = strange_convert(mid_data[4])
     gz = strange_convert(mid_data[5])
-    return (ax,ay,ax,gx,gy,gz)
+    return (ax,ay,az,gx,gy,gz)
 
 def imu_check_sum(target_msg):
     return sum(target_msg) & 0xff
