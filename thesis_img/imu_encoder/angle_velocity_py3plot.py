@@ -47,7 +47,7 @@ for i in range (0, len(t1)):
 
 with open(imu_file) as fp:  
     for line in fp:
-        (tt, gx, gy, gz) = line.split()
+        (tt, gx, gy, gz, ax, ay, az) = line.split()
         t2 += [float(tt)]
         gxs += [float(gx)]
         gys += [float(gy)]
@@ -68,7 +68,7 @@ plt.legend(('编码器测量值','传感器原始数值'))
 # plt.xlim(1544073813.35, 1544073819.9)
 # plt.ylim(-58, -18)
 
-plt.xlim(1545637.35, 1544073819.9)
-plt.ylim(-58, -18)
+# plt.xlim(1545637.35, 1544073819.9)
+# plt.ylim(-58, -18)
 plt.show()
 # plt.savefig('encoder_imu_compare.pdf')

@@ -124,7 +124,7 @@ fig, axs = plt.subplots(nrows=3)
 
 fig.subplots_adjust(hspace=0.4)
 ax = axs[0]
-ax.plot(sen_t, gyro_pitch, 'b', label='加速度计直接换算输出')
+ax.plot(sen_t, gyro_pitch, 'b', label='角速度积分输出')
 ax.plot(imu_t, imu_pitch, 'r', label='Mahony滤波器输出')
 ax.set_ylabel('俯仰角(rad)')
 # ax.set_xlabel('Unix时间戳(s)')
@@ -132,7 +132,7 @@ ax.grid(1)
 ax.legend(loc='lower left', fontsize='small', ncol=1)
 
 ax = axs[1]
-ax.plot(sen_t, gyro_roll, 'b', label='加速度计直接换算输出')
+ax.plot(sen_t, gyro_roll, 'b', label='角速度积分输出')
 ax.plot(imu_t, imu_roll, 'r', label='Mahony滤波器输出')
 ax.set_ylabel('横滚角(rad)')
 # ax.set_xlabel('Unix时间戳(s)')
@@ -140,7 +140,7 @@ ax.set_ylabel('横滚角(rad)')
 ax.grid(1)
 
 ax = axs[2]
-ax.plot(sen_t, gyro_yaw, 'b', label='加速度计直接换算输出')
+ax.plot(sen_t, gyro_yaw, 'b', label='角速度积分输出')
 ax.plot(imu_t, imu_yaw, 'r', label='Mahony滤波器输出')
 ax.set_ylabel('偏航角(rad)')
 ax.set_xlabel('Unix时间戳(s)')

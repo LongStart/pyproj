@@ -66,3 +66,12 @@ ax.set_ylabel('纵坐标(米)')
 ax.set_xlabel('时间(秒)')
 
 plt.show()
+
+plt.plot(tp, xp, 'bo',alpha=0.3,markersize=15,markeredgecolor='none')
+plt.plot(t1, x1, 'r', label='真实位置',linewidth=4)
+plt.plot(t1, x2, 'w', label='估计位置',linewidth=2)
+plt.legend(fontsize='small', ncol=1)
+plt.ylabel('横坐标(米)')
+plt.xlabel('时间(秒)')
+plt.grid(True)
+plt.show()
