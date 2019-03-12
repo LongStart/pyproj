@@ -24,12 +24,12 @@ for position in gps_dict['positions']:
     gps_x += [x*cos(a) - y*sin(a)]
     gps_y += [x*sin(a) + y*cos(a)]
 
-loc_x, loc_y = loc_file_to_list(loc_file_name, 0.67)
+# loc_x, loc_y = loc_file_to_list(loc_file_name, 0.67)
 odom_x, odom_y = odom_file_to_list(odom_file_name)
 
 plt.plot(odom_x, odom_y, '.')
 plt.plot(gps_x, gps_y, '.-')
-plt.plot(loc_x, loc_y, )
+# plt.plot(loc_x, loc_y, )
 plt.axis('equal')
 plt.show()
 

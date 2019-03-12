@@ -19,8 +19,10 @@ for section in position_dict["sections"]:
     x = []
     y = []
     for position in section["positions"]:
-        x += [position["latitude"]]
-        y += [position["longitude"]]
+        # x += [position["latitude"]]
+        # y += [position["longitude"]]
+        y += [position["latitude"]]
+        x += [position["longitude"]]
 
     plt.plot(x,y,'o-')
     # plt.pause(0.2)
