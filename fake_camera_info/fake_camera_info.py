@@ -21,8 +21,8 @@ def image_callback(msg, args):
 
 def process(unstamped_camera_info, camera_info_topic_name, image_topic_name):
     rospy.init_node('camera_info_generator')
-    camera_info_pub = rospy.Publisher('camera_info_topic_name', String, queue_size=10)
-    rospy.Subscriber(image_topic_name, String, callback, (camera_info_pub, unstamped_camera_info))
+    camera_info_pub = rospy.Publisher(camera_info_topic_name, CameraInfo, queue_size=10)
+    rospy.Subscriber(image_topic_name, Image, image_callback, (camera_info_pub, unstamped_camera_info))
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
