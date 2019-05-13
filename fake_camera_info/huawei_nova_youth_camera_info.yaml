@@ -1,0 +1,14 @@
+header:
+  seq: 0
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+height: 480
+width: 640
+distortion_model: 'plumb_bob'
+D: [0.1841,-0.6296,-0.0022,-0.0040,0.8279]
+K: [500.4771, 0.0, 316.925, 0.0, 499.5254, 235.1705, 0.0, 0.0, 1.0]
+R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+P: [500.4771, 0.0, 316.925, 0.0, 0.0, 499.5254, 235.1705, 0.0, 0.0, 0.0, 1.0, 0.0]
+binning_x: 0
+binning_y: 0
+roi: {x_offset: 0, y_offset: 0, height: 0, width: 0, do_rectify: false}
