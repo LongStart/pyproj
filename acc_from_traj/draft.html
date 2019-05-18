@@ -1,0 +1,85 @@
+<head>
+    <script type="text/javascript" async 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    li.L0,
+    li.L1,
+    li.L2,
+    li.L3,
+    li.L5,
+    li.L6,
+    li.L7,
+    li.L8 {
+        list-style-type: decimal !important;
+    }
+</style>
+</head>
+
+<body>
+<p>
+    \((\cdot)^W\) : variable in world coordinate;<br>
+    \((\cdot)^B\) : variable in body coordinate;<br>
+    \((\cdot)^A\) : variable in Apriltag coordinate;
+</p>
+<p>Trajectory from ROS bag</p>
+\[
+    \xi^A = 
+    \left[
+        \begin{matrix}
+        \rho \\
+        (\theta a)
+        \end{matrix}
+    \right]
+\]
+
+\[
+    R^A  = exp(\theta a)
+\]
+
+\[
+    R^{a \rightarrow b}  = exp(-\theta a) \tag{1-1}
+\]
+
+\[
+    R^{b \rightarrow a}  = exp(\theta a) \tag{1-2}
+\]
+
+<p>Target: acc noise</p>
+
+<p>Accelerometer model under Apriltag coordinate</p>
+\[
+    R^{b \rightarrow a} \hat a^B(t) = a_b(t) + a_n(t) + g + a(t) 
+\]
+<p>\(\hat a(t)\): acceleration from accelerometer, body coordinate</p>
+<p>\(a(t)\): acceleration from ground truth, Apriltag coordinate </p>
+<p>\(a_b(t)\): bias, body coordinate </p>
+<p>\(a_n(t)\): noise, body coordinate </p>
+<p>\(a_e(t) = a_b(t) + a_n(t)\): noise, error </p>
+<p>\(g\): gravity in world coordinate, constant value, from calibration </p>
+<h3>estimation of accelerometer error</h3>
+
+\[
+    \therefore a_e(t) = a_b(t) + a_n(t) = R^{b \rightarrow a} \hat a^B(t) - g^A - a(t)
+\]
+
+\[
+    a_e^B(t) = R^{a \rightarrow b} a_e^A(t)
+\]
+
+\[
+    a_e^B(t) = \hat a^B(t) - R^{a \rightarrow b}(t) (g^A - a^A(t))
+\]
+
+<p>use low pass filter to roughly extract \(a_b\) from \(a_e\)</p>
+
+\[
+a_b^B(t) = L(a_e^B(t))
+\]
+
+
+
+
+
+</body>

@@ -2,6 +2,9 @@ import rospy
 import rosbag
 import numpy as np
 from sys import argv
+from tf.transformations import rotation_from_matrix
+from tf.transformations import quaternion_matrix
+
 
 def derivative(p, t):
     if(len(t) != len(p)):
@@ -9,6 +12,16 @@ def derivative(p, t):
         quit()
     d2t = t[2:] - t[:-2]
     dp = p[1:] - p[:-1]
+    dt = t[1:] - t[:-1]
+    v = 1 / d2t * (dp[1:]*dt[:-1]/dt[1:] + dp[:-1]*dt[1:]/dt[:-1])
+    return v
+
+def derivative3d(p3, t):
+    if(len(t) != len(p)):
+        print("length mismatch")
+        quit()
+    d2t = t[2:] - t[:-2]
+    dp = p[:][1:] - p[:][:-1]
     dt = t[1:] - t[:-1]
     v = 1 / d2t * (dp[1:]*dt[:-1]/dt[1:] + dp[:-1]*dt[1:]/dt[:-1])
     return v
@@ -40,8 +53,10 @@ def Sequence4dFromTransformStamped(msgs):
     return Sequence4d(t, x, y, z)
 
 def RotationFromTransformStamped(msgs):
-    t = [msg.header.stamp.to_sec()   for msg in msgs]
-    r = []
+    t = [msg.header.stamp.to_sec() for msg in msgs]
+    qs = [msg.pose.orientation for msg in msgs]
+    r = [quaternion_matrix(rotation_from_matrix([q.x, q.y, q.z, q.w])) for q in qs]
+    return (t, r)
     
 
 def ReadTransformStamped(bag_filename, topic_name):
