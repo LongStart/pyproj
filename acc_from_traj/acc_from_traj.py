@@ -10,69 +10,69 @@ import PlotCollection
 from add_3axis_figure import *
 
 
-def derivative(p, t):
-    assert(len(t) == len(p))
-    d2t = t[2:] - t[:-2]
-    dp = p[1:] - p[:-1]
-    dt = t[1:] - t[:-1]
-    v = 1 / d2t * (dp[1:]*dt[:-1]/dt[1:] + dp[:-1]*dt[1:]/dt[:-1])
-    return v
+# def derivative(p, t):
+#     assert(len(t) == len(p))
+#     d2t = t[2:] - t[:-2]
+#     dp = p[1:] - p[:-1]
+#     dt = t[1:] - t[:-1]
+#     v = 1 / d2t * (dp[1:]*dt[:-1]/dt[1:] + dp[:-1]*dt[1:]/dt[:-1])
+#     return v
 
-def derivative3d(txyz):
-    dx_dt = derivative(txyz[1], txyz[0])
-    dy_dt = derivative(txyz[2], txyz[0])
-    dz_dt = derivative(txyz[3], txyz[0])
-    return np.array([txyz[0][1:-1], dx_dt, dy_dt, dz_dt])
+# def derivative3d(txyz):
+#     dx_dt = derivative(txyz[1], txyz[0])
+#     dy_dt = derivative(txyz[2], txyz[0])
+#     dz_dt = derivative(txyz[3], txyz[0])
+#     return np.array([txyz[0][1:-1], dx_dt, dy_dt, dz_dt])
 
-def Integral3d(txyz):
-    x = np.cumsum(txyz[0]*txyz[1])
-    y = np.cumsum(txyz[0]*txyz[2])
-    z = np.cumsum(txyz[0]*txyz[3])
-    return np.array([txyz[0], x, y, z])
+# def Integral3d(txyz):
+#     x = np.cumsum(txyz[0]*txyz[1])
+#     y = np.cumsum(txyz[0]*txyz[2])
+#     z = np.cumsum(txyz[0]*txyz[3])
+#     return np.array([txyz[0], x, y, z])
 
-def MovingAverage(p, t, half_width=3):
-    assert(len(t) == len(p))
-    width = 2*half_width + 1
-    dt = t[1:] - t[0:-1]
-    pp = (p[1:] + p[0:-1])/2
-    pt = pp*dt
-    p_sum = np.convolve(pt, np.ones(width),'valid')
-    t_sum = np.convolve(dt, np.ones(width),'valid')
-    return (p_sum / t_sum)
+# def MovingAverage(p, t, half_width=3):
+#     assert(len(t) == len(p))
+#     width = 2*half_width + 1
+#     dt = t[1:] - t[0:-1]
+#     pp = (p[1:] + p[0:-1])/2
+#     pt = pp*dt
+#     p_sum = np.convolve(pt, np.ones(width),'valid')
+#     t_sum = np.convolve(dt, np.ones(width),'valid')
+#     return (p_sum / t_sum)
 
-def MovingAverage3d(txyz, half_width=3):
-    x = MovingAverage(txyz[1], txyz[0], half_width)
-    y = MovingAverage(txyz[2], txyz[0], half_width)
-    z = MovingAverage(txyz[3], txyz[0], half_width)
-    t_begin = half_width
-    t_end = len(txyz[0]) - half_width -1
-    return np.array([txyz[0][t_begin:t_end], x, y, z])
+# def MovingAverage3d(txyz, half_width=3):
+#     x = MovingAverage(txyz[1], txyz[0], half_width)
+#     y = MovingAverage(txyz[2], txyz[0], half_width)
+#     z = MovingAverage(txyz[3], txyz[0], half_width)
+#     t_begin = half_width
+#     t_end = len(txyz[0]) - half_width -1
+#     return np.array([txyz[0][t_begin:t_end], x, y, z])
     
-def PositionMatrixFromTransformStamped(msgs):
-    # txyz = [[msg.header.stamp.to_sec(), msg.transform.translation.x, msg.transform.translation.y, msg.transform.translation.z] for msg in msgs]
-    t = [msg.header.stamp.to_sec()   for msg in msgs]
-    x = [msg.transform.translation.x for msg in msgs]
-    y = [msg.transform.translation.y for msg in msgs]
-    z = [msg.transform.translation.z for msg in msgs]  
+# def PositionMatrixFromTransformStamped(msgs):
+#     # txyz = [[msg.header.stamp.to_sec(), msg.transform.translation.x, msg.transform.translation.y, msg.transform.translation.z] for msg in msgs]
+#     t = [msg.header.stamp.to_sec()   for msg in msgs]
+#     x = [msg.transform.translation.x for msg in msgs]
+#     y = [msg.transform.translation.y for msg in msgs]
+#     z = [msg.transform.translation.z for msg in msgs]  
     
-    return np.array([t,x,y,z])
+#     return np.array([t,x,y,z])
 
-def SE3FromTransformStamped(msgs):
-    t = [msg.header.stamp.to_sec()   for msg in msgs]
-    x = [msg.transform.translation.x for msg in msgs]
-    y = [msg.transform.translation.y for msg in msgs]
-    z = [msg.transform.translation.z for msg in msgs]  
-    qs = [msg.transform.rotation for msg in msgs]
-    r = [quaternion_matrix([q.x, q.y, q.z, q.w])[0:-1,0:-1] for q in qs]
-    return np.array([t,x,y,z,r])
+# def SE3FromTransformStamped(msgs):
+#     t = [msg.header.stamp.to_sec()   for msg in msgs]
+#     x = [msg.transform.translation.x for msg in msgs]
+#     y = [msg.transform.translation.y for msg in msgs]
+#     z = [msg.transform.translation.z for msg in msgs]  
+#     qs = [msg.transform.rotation for msg in msgs]
+#     r = [quaternion_matrix([q.x, q.y, q.z, q.w])[0:-1,0:-1] for q in qs]
+#     return np.array([t,x,y,z,r])
 
-def ToBodyFrame(txyzr):
-    txyz = np.array(txyzr[0:-1,:])
-    for i in range(len(txyz[0])):
-        r = txyzr[4][i].transpose()
-        p = np.array(txyz[1:,i])
-        txyz[1:,i] = r.transpose().dot(p)
-    return txyz
+# def ToBodyFrame(txyzr):
+#     txyz = np.array(txyzr[0:-1,:])
+#     for i in range(len(txyz[0])):
+#         r = txyzr[4][i].transpose()
+#         p = np.array(txyz[1:,i])
+#         txyz[1:,i] = r.transpose().dot(p)
+#     return txyz
 
 def ToBodyFrame(txyz_in, r):
     assert(len(txyz_in.transpose()) == len(r))
@@ -82,19 +82,19 @@ def ToBodyFrame(txyz_in, r):
         txyz[1:,i] = r[i].dot(p)
     return txyz
 
-def RotationFromTransformStamped(msgs):
-    t = [msg.header.stamp.to_sec() for msg in msgs]
-    qs = [msg.pose.orientation for msg in msgs]
-    r = [quaternion_matrix(rotation_from_matrix([q.x, q.y, q.z, q.w])) for q in qs]
-    return (t, r)
+# def RotationFromTransformStamped(msgs):
+#     t = [msg.header.stamp.to_sec() for msg in msgs]
+#     qs = [msg.pose.orientation for msg in msgs]
+#     r = [quaternion_matrix(rotation_from_matrix([q.x, q.y, q.z, q.w])) for q in qs]
+#     return (t, r)
 
-def AccelerationFromIMU(msgs):
-    t = [msg.header.stamp.to_sec() for msg in msgs]
-    x = [msg.linear_acceleration.x for msg in msgs]
-    y = [msg.linear_acceleration.y for msg in msgs]
-    z = [msg.linear_acceleration.z for msg in msgs] 
-    # return np.array([t,x,y,z])
-    return np.array([t,y,z,x])
+# def AccelerationFromIMU(msgs):
+#     t = [msg.header.stamp.to_sec() for msg in msgs]
+#     x = [msg.linear_acceleration.x for msg in msgs]
+#     y = [msg.linear_acceleration.y for msg in msgs]
+#     z = [msg.linear_acceleration.z for msg in msgs] 
+#     # return np.array([t,x,y,z])
+#     return np.array([t,y,z,x])
 
 def GenerateGlobalGravity(t, value=9.81):
     g = np.array([value] * len(t))
