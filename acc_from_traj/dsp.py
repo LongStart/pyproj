@@ -2,6 +2,10 @@ import numpy as np
 from scipy import interpolate
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
+from scipy.signal import medfilt
+from scipy.signal import butter
+from scipy.signal import filtfilt
+from scipy.ndimage.filters import uniform_filter1d
 import operator
 
 # derivative
@@ -26,24 +30,49 @@ def Integral3d(txyz):
     z = np.cumsum(txyz[0]*txyz[3])
     return np.array([txyz[0], x, y, z])
 
-# moving average
-def MovingAverage(p, t, half_width=3):
+def weight_by_interval(p, t):
     assert(len(t) == len(p))
-    width = 2*half_width + 1
     dt = t[1:] - t[0:-1]
     pp = (p[1:] + p[0:-1])/2
     pt = pp*dt
-    p_sum = np.convolve(pt, np.ones(width),'valid')
-    t_sum = np.convolve(dt, np.ones(width),'valid')
-    return (p_sum / t_sum)
+    p2t = pt[0:-1] + pt[1:]
+    d2t = t[2:] - t[:-2]
+    return p2t/d2t
 
-def MovingAverage3d(txyz, half_width=3):
-    x = MovingAverage(txyz[1], txyz[0], half_width)
-    y = MovingAverage(txyz[2], txyz[0], half_width)
-    z = MovingAverage(txyz[3], txyz[0], half_width)
-    t_begin = half_width
-    t_end = len(txyz[0]) - half_width -1
-    return np.array([txyz[0][t_begin:t_end], x, y, z])
+# moving average
+def MovingAverage(p, t, kernel_size):
+    weighted_p = weight_by_interval(p, t)
+    return uniform_filter1d(weighted_p, kernel_size)
+
+def MovingAverage3d(txyz, kernel_size):
+    x = MovingAverage(txyz[1], txyz[0], kernel_size)
+    y = MovingAverage(txyz[2], txyz[0], kernel_size)
+    z = MovingAverage(txyz[3], txyz[0], kernel_size)
+    return np.array([txyz[0][1:-1], x, y, z])
+
+# medfilter
+def Medfilter(p, t, kernel_size=5):
+    weighted_p = weight_by_interval(p, t)
+    return medfilt(weighted_p, kernel_size=kernel_size)
+
+def Medfilter3d(txyz, kernel_size=5):
+    x = Medfilter(txyz[1], txyz[0], kernel_size)
+    y = Medfilter(txyz[2], txyz[0], kernel_size)
+    z = Medfilter(txyz[3], txyz[0], kernel_size)
+    return np.array([txyz[0][1:-1], x, y, z])
+
+# low pass
+def LFilter(p, t, order, critical_freq):
+    b,a = butter(order, critical_freq)
+    weighted_p = weight_by_interval(p, t)
+    return filtfilt(b, a, weighted_p)
+
+def LFilter3d(txyz, order, critical_freq):
+    x = LFilter(txyz[1], txyz[0], order, critical_freq)
+    y = LFilter(txyz[2], txyz[0], order, critical_freq)
+    z = LFilter(txyz[3], txyz[0], order, critical_freq)
+    return np.array([txyz[0][1:-1], x, y, z])
+
 
 # interpolation
 ## 3d linear

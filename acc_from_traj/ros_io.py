@@ -23,6 +23,13 @@ def AccelerationFromIMU(msgs):
     z = [msg.linear_acceleration.z for msg in msgs] 
     return np.array([t,y,z,x])
 
+def AngleRateFromIMU(msgs):
+    t = [msg.header.stamp.to_sec() for msg in msgs]
+    x = [msg.angular_velocity.x for msg in msgs]
+    y = [msg.angular_velocity.y for msg in msgs]
+    z = [msg.angular_velocity.z for msg in msgs] 
+    return np.array([t,y,z,x])
+
 def SecondsToRosTime(ts):
     return [rospy.Time(secs=t) for t in ts]
     

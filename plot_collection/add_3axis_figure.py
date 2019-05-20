@@ -7,7 +7,7 @@ def check_signal_dict(signal_dict):
             if len(signal_dict[key][0]) != len(signal_dict[key][i]):
                 raise ValueError('signal {0} axis {1} length mismatch, len(t): {2}, len axis: {3}'.format(key, i, len(signal_dict[key][0]), len(signal_dict[key][i])))
 
-def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1):
+def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1, fmt=''):
     fig = pl.figure()
     check_signal_dict(vec3d_dict)
     ax1 = fig.add_subplot(311)
@@ -18,8 +18,8 @@ def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1):
         else:
             ax = fig.add_subplot(311 + i, sharex = ax1)
         for key in vec3d_dict:
-            ax.plot(vec3d_dict[key][0], vec3d_dict[key][1+i], '-', label= key + str(i+1), linewidth=linewidth)
-            ax.set_ylabel(str(i+1))
+            ax.plot(vec3d_dict[key][0], vec3d_dict[key][1+i], fmt, label= key , linewidth=linewidth)
+            ax.set_ylabel(chr(120 + i))
             # pl.setp(ax.get_xticklabels(), visible=False)
             ax.legend()
             ax.grid(1)

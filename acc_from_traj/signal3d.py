@@ -45,7 +45,13 @@ class Signal3d():
     def Integral(self):
         return Signal3d(Integral3d(self.data))
 
-    def MovingAverage(self, half_width=3):
-        return Signal3d(MovingAverage3d(self.data, half_width))
+    def MovingAverage(self, kernel_size=3):
+        return Signal3d(MovingAverage3d(self.data, kernel_size))
+    
+    def Midfilter(self, kernel_size=5):
+        return Signal3d(Medfilter3d(self.data, kernel_size))
+
+    def LFilter(self, critical_freq, order=3):
+        return Signal3d(LFilter3d(self.data, order, critical_freq))
 
     
