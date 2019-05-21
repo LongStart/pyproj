@@ -39,6 +39,14 @@ def weight_by_interval(p, t):
     d2t = t[2:] - t[:-2]
     return p2t/d2t
 
+# rotation
+def Rotate(txyz, rot_vec):
+    r = R.from_rotvec(rot_vec)
+    result = np.array(txyz)
+    for i in range(len(result.transpose())):
+        result[1:,i] = r.as_dcm().dot(result[1:,i]) 
+    return result 
+
 # moving average
 def MovingAverage(p, t, kernel_size):
     weighted_p = weight_by_interval(p, t)

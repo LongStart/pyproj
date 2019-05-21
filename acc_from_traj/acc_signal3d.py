@@ -9,10 +9,14 @@ import PlotCollection
 from add_3axis_figure import *
 from ros_io import *
 from signal3d import Signal3d
+from scipy.spatial.transform import Rotation as R
 
-def GenerateGlobalGravity(t, value=9.81):
-    g = np.array([value] * len(t))
-    return np.array([t, np.zeros(len(t)), np.zeros(len(t)), g])
+def GenerateGlobalGravity(t, xyz):
+    # g = np.array([value] * len(t))
+    x = np.array([xyz[0]] * len(t))
+    y = np.array([xyz[1]] * len(t))
+    z = np.array([xyz[2]] * len(t))
+    return np.array([t, x, y, z])
 
 def CorrectBiasedStamp(ts, threashold=0.7):
     dts = ts[1:] - ts[0:-1]
@@ -65,20 +69,30 @@ if __name__ == '__main__':
     acc_body = acc_world.Rotate(world_to_body)
     # ave_acc_body = acc_body.Midfilter(kernel_size=19)
     # ave_acc_body = acc_body.MovingAverage(kernel_size=19)
-    ave_acc_body = acc_body.LFilter(0.15)
+    ave_acc_body = acc_body.LFilter(0.06)
     
     imu_msgs = ReadTopicMsg(bag_filename, imu_topic_name)
     acc_imu = Signal3d(AccelerationFromIMU(imu_msgs))
-    angle_rate_imu = Signal3d(AngleRateFromIMU(imu_msgs))
+    rotate_imu_to_camera = R.from_dcm([[0,1,0],[0,0,1],[1,0,0]])
+    acc_imu = acc_imu.Rotate(rotate_imu_to_camera.as_rotvec())
+    # angle_rate_imu = Signal3d(AngleRateFromIMU(imu_msgs))
     # ave_acc_imu = acc_imu.Midfilter(kernel_size=19)
     # ave_acc_imu = acc_imu.MovingAverage(kernel_size=19)
+
+    ave_num = 100
+    gravity_est_raw = sum(acc_imu.xyz().transpose()[0:ave_num+1])/ave_num
+    print(gravity_est_raw)
+    gravity_est = rotate_imu_to_camera.as_dcm().dot(gravity_est_raw)
     
 
     #gravity
-    g_world = Signal3d(GenerateGlobalGravity(acc_imu.t()))
+    # g_world = Signal3d(GenerateGlobalGravity(acc_imu.t()))
+    # g_body = g_world.Rotate(world_to_body)
+    # g_world = Signal3d(GenerateGlobalGravity(acc_imu.t(), gravity_est))
+    g_world = Signal3d(GenerateGlobalGravity(acc_imu.t(), np.array([9.8, 0, 0])))
     g_body = g_world.Rotate(world_to_body)
-    acc_imu = acc_imu - g_body
-    ave_acc_imu = acc_imu.LFilter(0.3)
+    # acc_imu = acc_imu - g_body
+    ave_acc_imu = acc_imu.LFilter(0.02)
     acc_bias = ave_acc_body - ave_acc_imu 
 
     plotter = PlotCollection.PlotCollection("My window name")
@@ -91,12 +105,12 @@ if __name__ == '__main__':
         # 'acc_imu': acc_imu.data
         }
     acc_bias = {'acc_bias': acc_bias.data}
-    angle_rate = {'angle_rate_imu': angle_rate_imu.data}
+    # angle_rate = {'angle_rate_imu': angle_rate_imu.data}
     add_3axis_figure(plotter, "pos", pos, fmt='.-')
     add_3axis_figure(plotter, "vel", vel)
     add_3axis_figure(plotter, "acc", acc, linewidth=1)
     add_3axis_figure(plotter, "acc_bias", acc_bias)
-    add_3axis_figure(plotter, "angle_rate", angle_rate)
+    # add_3axis_figure(plotter, "angle_rate", angle_rate)
     plotter.show()
 
     

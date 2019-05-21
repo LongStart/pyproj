@@ -36,7 +36,12 @@ class Signal3d():
         return Signal3d(UnalignedOperate3d(self.data, signal.data, operator.mul))
 
     def Rotate(self, signal):
-        return Signal3d(UnalignedRotate(self.data, signal.data))
+        if isinstance(signal, Signal3d):
+            return Signal3d(UnalignedRotate(self.data, signal.data))
+        if isinstance(signal, np.ndarray) and 3 == len(signal):
+            return Signal3d(Rotate(self.data, signal))
+        else:
+            raise TypeError("not handle: {0}".format(type(signal)))
     
     #dsp
     def Derivative(self):
