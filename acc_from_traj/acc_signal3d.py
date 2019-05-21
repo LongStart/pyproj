@@ -34,6 +34,19 @@ def CorrectBiasedStamp(ts, threashold=0.7):
             # cnt += 1
             ts[idx_ts] = ts[idx_ts - 1] + dt_mean
 
+def RotationBetweenVector3d(v1, v2):
+    cross = np.cross(v1, v2)
+    cross_norm = np.linalg.norm(cross)
+    dot = v1.dot(v2)
+    return cross* np.arctan2(cross_norm, dot) /cross_norm
+
+if __name__ == '__maindd__':
+    g_imu = np.array([9.34, 0.32, -3.22])
+    g_world = np.array([0, 0, 9.8])
+    rotv = RotationBetweenVector3d(g_imu, g_world)
+    r = R.from_rotvec(rotv)
+    print(r.apply(g_imu))
+
 if __name__ == '__main__':
     if(len(argv) < 3):
         print("Example: python acc_from_traj.py bag_path dataset_name")
@@ -53,12 +66,12 @@ if __name__ == '__main__':
 
     transform_msgs = ReadTopicMsg(bag_filename, groundtruth_topic_name)
 
-    raw_position = PositionFromTransformStamped(transform_msgs)
-    CorrectBiasedStamp(raw_position[0])
+    raw_gt_position = PositionFromTransformStamped(transform_msgs)
+    CorrectBiasedStamp(raw_gt_position[0])
 
-    pos_world = Signal3d(raw_position)
-    vel_world = pos_world.Derivative()
-    acc_world = vel_world.Derivative()
+    pos_gt_world = Signal3d(raw_gt_position)
+    vel_gt_world = pos_gt_world.Derivative()
+    acc_gt_world = vel_gt_world.Derivative()
 
     
     # quit()
@@ -66,48 +79,38 @@ if __name__ == '__main__':
     body_to_world = Signal3d(RotationFromTransformStamped(transform_msgs))
     world_to_body = body_to_world*(-1)
 
-    acc_body = acc_world.Rotate(world_to_body)
-    # ave_acc_body = acc_body.Midfilter(kernel_size=19)
-    # ave_acc_body = acc_body.MovingAverage(kernel_size=19)
-    ave_acc_body = acc_body.LFilter(0.06)
+    acc_gt_body = acc_gt_world.Rotate(world_to_body)
+    ave_acc_gt_body = acc_gt_body.LFilter(0.06)
     
     imu_msgs = ReadTopicMsg(bag_filename, imu_topic_name)
-    acc_imu = Signal3d(AccelerationFromIMU(imu_msgs))
-    rotate_imu_to_camera = R.from_dcm([[0,1,0],[0,0,1],[1,0,0]])
-    acc_imu = acc_imu.Rotate(rotate_imu_to_camera.as_rotvec())
-    # angle_rate_imu = Signal3d(AngleRateFromIMU(imu_msgs))
-    # ave_acc_imu = acc_imu.Midfilter(kernel_size=19)
-    # ave_acc_imu = acc_imu.MovingAverage(kernel_size=19)
-
+    acc_sensor_imu = Signal3d(AccelerationFromIMU(imu_msgs))
+    g_vec_world = np.array([0, 0, 9.8])
     ave_num = 100
-    gravity_est_raw = sum(acc_imu.xyz().transpose()[0:ave_num+1])/ave_num
-    print(gravity_est_raw)
-    gravity_est = rotate_imu_to_camera.as_dcm().dot(gravity_est_raw)
+    g_t0_imu = sum(acc_sensor_imu.xyz().transpose()[0:ave_num+1])/ave_num
     
-
-    #gravity
-    # g_world = Signal3d(GenerateGlobalGravity(acc_imu.t()))
-    # g_body = g_world.Rotate(world_to_body)
-    # g_world = Signal3d(GenerateGlobalGravity(acc_imu.t(), gravity_est))
-    g_world = Signal3d(GenerateGlobalGravity(acc_imu.t(), np.array([9.8, 0, 0])))
-    g_body = g_world.Rotate(world_to_body)
-    # acc_imu = acc_imu - g_body
-    ave_acc_imu = acc_imu.LFilter(0.02)
-    acc_bias = ave_acc_body - ave_acc_imu 
+    imu_to_body = RotationBetweenVector3d(g_t0_imu, g_vec_world)
+    body_to_imu = -imu_to_body
+    
+    acc_sensor_body = acc_sensor_imu.Rotate(imu_to_body)
+    g_world = Signal3d(GenerateGlobalGravity(acc_sensor_imu.t(), g_vec_world))
+    g_body = g_world.Rotate(world_to_body)  
+    
+    acc_sensor_body = acc_sensor_body - g_body
+    
+    ave_acc_sensor_body = acc_sensor_body.LFilter(0.02)
+    acc_bias_body = ave_acc_sensor_body - ave_acc_gt_body 
 
     plotter = PlotCollection.PlotCollection("My window name")
-    pos = {'pos_w': pos_world.data}
-    vel = {'vel': vel_world.data}
+    pos = {'pos_gt_world': pos_gt_world.data}
+    vel = {'vel_gt_world': vel_gt_world.data}
     acc = {
-        # 'acc_b': acc_body.data, 
-        'ave_acc_b': ave_acc_body.data,
-        'ave_acc_imu': ave_acc_imu.data, 
-        # 'acc_imu': acc_imu.data
+        'ave_acc_gt_body': ave_acc_gt_body.data,
+        'ave_acc_sensor_body': ave_acc_sensor_body.data, 
         }
-    acc_bias = {'acc_bias': acc_bias.data}
+    acc_bias = {'acc_bias_body': acc_bias_body.data}
     # angle_rate = {'angle_rate_imu': angle_rate_imu.data}
-    add_3axis_figure(plotter, "pos", pos, fmt='.-')
-    add_3axis_figure(plotter, "vel", vel)
+    # add_3axis_figure(plotter, "pos", pos, fmt='.-')
+    # add_3axis_figure(plotter, "vel", vel)
     add_3axis_figure(plotter, "acc", acc, linewidth=1)
     add_3axis_figure(plotter, "acc_bias", acc_bias)
     # add_3axis_figure(plotter, "angle_rate", angle_rate)
