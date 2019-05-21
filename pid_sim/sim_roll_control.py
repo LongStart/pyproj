@@ -40,8 +40,8 @@ while ts < sim_time:
 
 
 
-plt.plot(t, y)
-plt.plot(t, x)
+plt.plot(t, y, '-')
+plt.plot(t, x, '--')
 plt.ylabel('横滚角 (°)')
 plt.xlabel('时间 (s)')
 plt.xlim(1.4,4.1)

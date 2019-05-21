@@ -44,8 +44,8 @@ while ts < sim_time:
 
 
 
-plt.plot(t, y)
-plt.plot(t, x)
+plt.plot(t, y, '-')
+plt.plot(t, x, '--')
 plt.ylabel('偏航角 (°)')
 plt.xlabel('时间 (s)')
 plt.title('偏航角控制-斜坡响应曲线')
