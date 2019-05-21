@@ -80,7 +80,8 @@ if __name__ == '__main__':
     world_to_body = body_to_world*(-1)
 
     acc_gt_body = acc_gt_world.Rotate(world_to_body)
-    ave_acc_gt_body = acc_gt_body.LFilter(0.06)
+    # ave_acc_gt_body = acc_gt_body.LFilter(0.06)
+    ave_acc_gt_body = acc_gt_body.MovingAverage(50)
     
     imu_msgs = ReadTopicMsg(bag_filename, imu_topic_name)
     acc_sensor_imu = Signal3d(AccelerationFromIMU(imu_msgs))
@@ -97,7 +98,8 @@ if __name__ == '__main__':
     
     acc_sensor_body = acc_sensor_body - g_body
     
-    ave_acc_sensor_body = acc_sensor_body.LFilter(0.02)
+    # ave_acc_sensor_body = acc_sensor_body.LFilter(0.02)
+    ave_acc_sensor_body = acc_sensor_body.MovingAverage(100)
     acc_bias_body = ave_acc_sensor_body - ave_acc_gt_body 
 
     plotter = PlotCollection.PlotCollection("My window name")
@@ -109,8 +111,8 @@ if __name__ == '__main__':
         }
     acc_bias = {'acc_bias_body': acc_bias_body.data}
     # angle_rate = {'angle_rate_imu': angle_rate_imu.data}
-    # add_3axis_figure(plotter, "pos", pos, fmt='.-')
-    # add_3axis_figure(plotter, "vel", vel)
+    add_3axis_figure(plotter, "pos", pos, fmt='.-')
+    add_3axis_figure(plotter, "vel", vel)
     add_3axis_figure(plotter, "acc", acc, linewidth=1)
     add_3axis_figure(plotter, "acc_bias", acc_bias)
     # add_3axis_figure(plotter, "angle_rate", angle_rate)
