@@ -3,14 +3,31 @@ from dsp import *
 import operator
 
 class Signal3d():
+    """ 
+        All argument of the interfaces should be Signal3d 
+    """
+    def __init__(self, np_array):
+            self.data = np_array
     
-    def __init__(self, param):
-        if(isinstance(param, np.ndarray)):
-            self.data = param
-        elif(isinstance(param, Signal3d)):
-            self.data = param.data
-        else:
-            raise TypeError('fuck?')
+    @classmethod
+    def from_np_array(cls, array):
+        return cls(np_array = array)
+
+    @classmethod
+    def from_vector(cls, vector, t=None):
+        if isinstance(t, int) or isinstance(t, float) or isinstance(t, np.ndarray):
+            data = TimeConstantVector3d(t, vector)
+            return cls(np_array = data)
+        elif None == t:
+            data = TimeConstantVector3d(0, vector)
+            return cls(np_array = data)
+    
+    @classmethod
+    def copy(cls, other):
+        return cls(np_array = other.data)
+
+
+
 
     # getter
     def t(self):
@@ -38,8 +55,8 @@ class Signal3d():
     def Rotate(self, signal):
         if isinstance(signal, Signal3d):
             return Signal3d(UnalignedRotate(self.data, signal.data))
-        if isinstance(signal, np.ndarray) and 3 == len(signal):
-            return Signal3d(Rotate(self.data, signal))
+        # if isinstance(signal, np.ndarray) and 3 == len(signal):
+        #     return Signal3d(Rotate(self.data, signal))
         else:
             raise TypeError("not handle: {0}".format(type(signal)))
     

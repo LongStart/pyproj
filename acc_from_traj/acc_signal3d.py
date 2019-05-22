@@ -34,7 +34,7 @@ def CorrectBiasedStamp(ts, threashold=0.7):
             # cnt += 1
             ts[idx_ts] = ts[idx_ts - 1] + dt_mean
 
-def RotationBetweenVector3d(v1, v2):
+def RotVecBetweenVector3d(v1, v2):
     cross = np.cross(v1, v2)
     cross_norm = np.linalg.norm(cross)
     dot = v1.dot(v2)
@@ -49,10 +49,11 @@ if __name__ == '__maindd__':
 
 if __name__ == '__main__':
     if(len(argv) < 3):
-        print("Example: python acc_from_traj.py bag_path dataset_name")
+        print("Example: python acc_from_traj.py dataset_name bag_path ")
         quit()
-    bag_filename = argv[1]
-    dataset_name = argv[2]
+    dataset_name = argv[1]
+    bag_filename = argv[2]
+    
     groundtruth_topic_name = ''
     imu_topic_name = ''
     if dataset_name == 'euroc':
@@ -89,11 +90,11 @@ if __name__ == '__main__':
     ave_num = 100
     g_t0_imu = sum(acc_sensor_imu.xyz().transpose()[0:ave_num+1])/ave_num
     
-    imu_to_body = RotationBetweenVector3d(g_t0_imu, g_vec_world)
-    body_to_imu = -imu_to_body
+    imu_to_body = Signal3d.from_vector(RotVecBetweenVector3d(g_t0_imu, g_vec_world))
+    body_to_imu = imu_to_body * (-1)
     
     acc_sensor_body = acc_sensor_imu.Rotate(imu_to_body)
-    g_world = Signal3d(GenerateGlobalGravity(acc_sensor_imu.t(), g_vec_world))
+    g_world = Signal3d.from_vector(g_vec_world, t=acc_sensor_imu.t())
     g_body = g_world.Rotate(world_to_body)  
     
     acc_sensor_body = acc_sensor_body - g_body

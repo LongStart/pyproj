@@ -22,7 +22,6 @@ def AccelerationFromIMU(msgs):
     y = [msg.linear_acceleration.y for msg in msgs]
     z = [msg.linear_acceleration.z for msg in msgs] 
     return np.array([t,x,y,z])
-#     return np.array([t,y,z,x])
         
 
 def AngleRateFromIMU(msgs):
