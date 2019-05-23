@@ -52,8 +52,13 @@ class Signal3d():
     def dot(self, signal):
         return Signal3d(UnalignedOperate3d(self.data, signal.data, operator.mul))
 
-    def Rotate(self, signal):
-        return Signal3d(UnalignedRotate(self.data, signal.data))
+    # def Rotate(self, signal):
+    #     return Signal3d(UnalignedRotate(self.data, signal.data))
+    def _Rotate(self, txyzw):
+        assert(len(self.data.transpose()) == len(txyzw.transpose()))
+        result = np.array(self.data)
+        R.from_quat(txyzw.transpose()[1:]).apply(result.transpose()[1:])
+        return result
     
     #dsp
     def Derivative(self):
