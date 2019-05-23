@@ -7,7 +7,7 @@ class OfflineTfBuffer():
     def __init__(self, transforms):
         self.t_front = transforms[0].header.stamp
         self.t_back = transforms[-1].header.stamp
-        self.buff = Buffer(cache_time=(self.t_back - self.t_front))
+        self.buff = Buffer(cache_time=(self.t_back - self.t_front), debug=False)
         for transform in transforms:
             self.buff.set_transform(transform, '/auth')
         

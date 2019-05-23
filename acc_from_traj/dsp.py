@@ -10,6 +10,22 @@ import operator
 from bisect import bisect
 ###### All the input and output arguments should be np.ndarray
 
+# time slice
+def AvailableTimeSlice(overlong_t, available_t):
+    '''
+        return a slice, about a range of overlong_t. The subarray of overlong_t have the same time range of available_t.
+    '''
+    i_begin = bisect(overlong_t, available_t[0])
+    i_end   = bisect(overlong_t, available_t[-1])
+    return slice(i_begin, i_end)
+
+def AvailableSubarray(overlong_txyz, available_txyz):
+    '''
+        return a subarray of overlong_txyz, cutted according to time range of available_txyz
+    '''
+    slice = AvailableTimeSlice(overlong_txyz[0], available_txyz[0])
+    return overlong_txyz[:, slice]
+    
 # time const 
 def TimeConstantVector3d(t, xyz):
     if isinstance(t, int) or isinstance(t, float):
@@ -108,9 +124,9 @@ def LFilter3d(txyz, order, critical_freq):
 def Interpolate3d(txyz, t):
     if 1 == len(txyz.transpose()):
         return TimeConstantVector3d(t, txyz.transpose()[1:])
-    fx = interpolate.interp1d(txyz[0], txyz[1], fill_value="extrapolate")
-    fy = interpolate.interp1d(txyz[0], txyz[2], fill_value="extrapolate")
-    fz = interpolate.interp1d(txyz[0], txyz[3], fill_value="extrapolate")
+    fx = interpolate.interp1d(txyz[0], txyz[1], bounds_error=True)
+    fy = interpolate.interp1d(txyz[0], txyz[2], bounds_error=True)
+    fz = interpolate.interp1d(txyz[0], txyz[3], bounds_error=True)
     return np.array([t, fx(t), fy(t), fz(t)])
 
 ## rotation
@@ -123,15 +139,21 @@ def InterpolateRotation(rot_txyz, t):
     interp_r = np.array([rotvec.as_rotvec() for rotvec in interp_rots]).transpose()
     return np.array([t, interp_r[0], interp_r[1], interp_r[2]])
 
+## rotate by rotvec
+def MultiplyAlignedRotVec(xyz, rot_xyz):
+    assert(len(xyz.transpose()) == len(rot_xyz.transpose()))
+    result_xyz = np.array(xyz)
+    for i in range(len(result_xyz.transpose())):
+        result_xyz[:,i] = R.from_rotvec(rot_xyz[:,i]).apply( result_xyz[:,i] )
+    return result_xyz
+
 # unaligned operation
 ## normal operation
 def UnalignedOperate3d(txyz_0, txyz_1, ope):
-    t = np.array(txyz_0[0])
-    txyz_1_interp = Interpolate3d(txyz_1, t)
-    x = ope(txyz_0[1], txyz_1_interp[1])
-    y = ope(txyz_0[2], txyz_1_interp[2])
-    z = ope(txyz_0[3], txyz_1_interp[3])
-    return np.array([t, x, y, z])
+    sub_txyz_0 = AvailableSubarray(txyz_0, txyz_1)    
+    txyz_1_interp = Interpolate3d(txyz_1, sub_txyz_0[0])
+    xyz = ope(sub_txyz_0[1:], txyz_1_interp[1:])
+    return np.array([sub_txyz_0[0], xyz[0], xyz[1], xyz[2]])
 
 ## rot
 def RotateByRotVec(txyz, rot_vec):
@@ -145,14 +167,11 @@ def UnalignedRotate(txyz, rot_txyz):
     if(len(rot_txyz.transpose()) == 1):
         return RotateByRotVec(txyz, rot_txyz[1:].transpose())
 
-    i_begin = bisect(txyz[0], rot_txyz[0,0])
-    i_end = bisect(txyz[0], rot_txyz[0,-1])
-    result_txyz = np.array(txyz[:, i_begin: i_end])
-    rot_txyz_interp = InterpolateRotation(rot_txyz, result_txyz[0])
+    sub_txyz = AvailableSubarray(txyz, rot_txyz)    
+    rot_txyz_interp = InterpolateRotation(rot_txyz, sub_txyz[0])
     
-    for i in range(len(result_txyz[0])):
-        result_txyz[1:,i] = R.from_rotvec(rot_txyz_interp[1:,i]).apply( result_txyz[1:,i] )
-    return result_txyz
+    result_xyz = MultiplyAlignedRotVec(sub_txyz[1:], rot_txyz_interp[1:])
+    return np.array([sub_txyz[0], result_xyz[0], result_xyz[1], result_xyz[2]])
 
 
 if __name__ == '__main__':
