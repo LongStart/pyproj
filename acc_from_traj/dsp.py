@@ -46,8 +46,6 @@ def Derivative(p, t):
     return v
 
 def Derivative3d(txyz):
-    if 1 == len(txyz.transpose()):
-        return np.array([txyz[0][:], [0], [0], [0]])    
     dx_dt = Derivative(txyz[1], txyz[0])
     dy_dt = Derivative(txyz[2], txyz[0])
     dz_dt = Derivative(txyz[3], txyz[0])
@@ -78,14 +76,15 @@ def Rotate(txyz, rot_vec):
         result[1:,i] = r.apply(result[1:,i]) 
     return result 
 
+####################################################################
+# Filter
+####################################################################
 # moving average
 def MovingAverage(p, t, kernel_size):
     weighted_p = weight_by_interval(p, t)
     return uniform_filter1d(weighted_p, kernel_size)
 
 def MovingAverage3d(txyz, kernel_size):
-    if 1 == len(txyz.transpose()):
-        return np.array(txyz)    
     x = MovingAverage(txyz[1], txyz[0], kernel_size)
     y = MovingAverage(txyz[2], txyz[0], kernel_size)
     z = MovingAverage(txyz[3], txyz[0], kernel_size)
@@ -97,8 +96,6 @@ def Medfilter(p, t, kernel_size=5):
     return medfilt(weighted_p, kernel_size=kernel_size)
 
 def Medfilter3d(txyz, kernel_size=5):
-    if 1 == len(txyz.transpose()):
-        return np.array(txyz)
     x = Medfilter(txyz[1], txyz[0], kernel_size)
     y = Medfilter(txyz[2], txyz[0], kernel_size)
     z = Medfilter(txyz[3], txyz[0], kernel_size)
@@ -111,19 +108,38 @@ def LFilter(p, t, order, critical_freq):
     return filtfilt(b, a, weighted_p)
 
 def LFilter3d(txyz, order, critical_freq):
-    if 1 == len(txyz.transpose()):
-        return np.array(txyz)
     x = LFilter(txyz[1], txyz[0], order, critical_freq)
     y = LFilter(txyz[2], txyz[0], order, critical_freq)
     z = LFilter(txyz[3], txyz[0], order, critical_freq)
     return np.array([txyz[0][1:-1], x, y, z])
 
+####################################################################
+# Signal Alignment
+####################################################################
+def GenerateAvailableSignal(txyz_this, txyz_that):
+    '''
+        1. deal with outside point 
+        2. extend constant signal  
+    '''
+    len_this = len(txyz_this.transpose())
+    len_that = len(txyz_that.transpose())
+    if len_this > 1 and len_that > 1:
+        txyz_this_sub = AvailableSubarray(txyz_this, txyz_that)
+        return (txyz_this_sub, txyz_that)
+    elif len_this == 1 and len_that > 1:
+        txyz_this_extend = TimeConstantVector3d(txyz_that[0], txyz_this[1:,0])
+        return (txyz_this_extend, txyz_that)
+    elif len_this > 1 and len_that == 1:
+        txyz_that_extend = TimeConstantVector3d(txyz_this[0], txyz_that[1:,0])
+        return (txyz_this, txyz_that_extend)
+    elif len_this == 1 and len_that == 1:
+        return (txyz_this, txyz_that)
 
+####################################################################
 # interpolation
+####################################################################
 ## 3d linear
 def Interpolate3d(txyz, t):
-    if 1 == len(txyz.transpose()):
-        return TimeConstantVector3d(t, txyz.transpose()[1:])
     fx = interpolate.interp1d(txyz[0], txyz[1], bounds_error=True)
     fy = interpolate.interp1d(txyz[0], txyz[2], bounds_error=True)
     fz = interpolate.interp1d(txyz[0], txyz[3], bounds_error=True)
@@ -131,8 +147,6 @@ def Interpolate3d(txyz, t):
 
 ## rotation
 def InterpolateRotation(rot_txyz, t):
-    if 1 == len(rot_txyz.transpose()):
-        return TimeConstantVector3d(t, rot_txyz.transpose()[1:])
     rots = R.from_rotvec(rot_txyz[1:].transpose())
     slerp = Slerp(rot_txyz[0], rots)
     interp_rots = slerp(t)
@@ -140,7 +154,7 @@ def InterpolateRotation(rot_txyz, t):
     return np.array([t, interp_r[0], interp_r[1], interp_r[2]])
 
 ## rotate by rotvec
-def MultiplyAlignedRotVec(xyz, rot_xyz):
+def AlignedRotate(xyz, rot_xyz):
     assert(len(xyz.transpose()) == len(rot_xyz.transpose()))
     result_xyz = np.array(xyz)
     for i in range(len(result_xyz.transpose())):
@@ -149,11 +163,11 @@ def MultiplyAlignedRotVec(xyz, rot_xyz):
 
 # unaligned operation
 ## normal operation
-def UnalignedOperate3d(txyz_0, txyz_1, ope):
-    sub_txyz_0 = AvailableSubarray(txyz_0, txyz_1)    
-    txyz_1_interp = Interpolate3d(txyz_1, sub_txyz_0[0])
-    xyz = ope(sub_txyz_0[1:], txyz_1_interp[1:])
-    return np.array([sub_txyz_0[0], xyz[0], xyz[1], xyz[2]])
+def UnalignedOperate3d(raw_txyz_0, raw_txyz_1, ope):
+    txyz_0, txyz_1 = GenerateAvailableSignal(raw_txyz_0, raw_txyz_1)
+    txyz_1_interp = Interpolate3d(txyz_1, txyz_0[0])
+    xyz = ope(txyz_0[1:], txyz_1_interp[1:])
+    return np.array([txyz_0[0], xyz[0], xyz[1], xyz[2]])
 
 ## rot
 def RotateByRotVec(txyz, rot_vec):
@@ -163,15 +177,12 @@ def RotateByRotVec(txyz, rot_vec):
         rotated[1:,i] = r.apply( rotated[1:,i] )
     return rotated
 
-def UnalignedRotate(txyz, rot_txyz):
-    if(len(rot_txyz.transpose()) == 1):
-        return RotateByRotVec(txyz, rot_txyz[1:].transpose())
-
-    sub_txyz = AvailableSubarray(txyz, rot_txyz)    
-    rot_txyz_interp = InterpolateRotation(rot_txyz, sub_txyz[0])
+def UnalignedRotate(raw_txyz, raw_rot_txyz):
+    txyz, rot_txyz = GenerateAvailableSignal(raw_txyz, raw_rot_txyz)
+    rot_txyz_interp = InterpolateRotation(rot_txyz, txyz[0])
     
-    result_xyz = MultiplyAlignedRotVec(sub_txyz[1:], rot_txyz_interp[1:])
-    return np.array([sub_txyz[0], result_xyz[0], result_xyz[1], result_xyz[2]])
+    result_xyz = AlignedRotate(txyz[1:], rot_txyz_interp[1:])
+    return np.array([txyz[0], result_xyz[0], result_xyz[1], result_xyz[2]])
 
 
 if __name__ == '__main__':
