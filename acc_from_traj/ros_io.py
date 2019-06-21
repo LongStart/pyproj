@@ -10,6 +10,18 @@ def PositionFromTransformStamped(msgs):
     z = [msg.transform.translation.z for msg in msgs]  
     return np.array([t,x,y,z])
 
+def PoseFromTransformStamped(msgs):
+    t = [msg.header.stamp.to_sec()   for msg in msgs]
+    x = [msg.transform.translation.x for msg in msgs]
+    y = [msg.transform.translation.y for msg in msgs]
+    z = [msg.transform.translation.z for msg in msgs]  
+    
+    rx = [msg.transform.rotation.x for msg in msgs]
+    ry = [msg.transform.rotation.y for msg in msgs]
+    rz = [msg.transform.rotation.z for msg in msgs]  
+    rw = [msg.transform.rotation.w for msg in msgs]
+    return np.array([t,x,y,z, rx, ry, rz, rw])
+
 def RotationFromTransformStamped(msgs):
     t = [msg.header.stamp.to_sec() for msg in msgs]
     qs = [msg.transform.rotation for msg in msgs]

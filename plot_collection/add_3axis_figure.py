@@ -20,10 +20,30 @@ def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1, fmt=''):
         for key in vec3d_dict:
             ax.plot(vec3d_dict[key][0], vec3d_dict[key][1+i], fmt, label= key , linewidth=linewidth)
             ax.set_ylabel(chr(120 + i))
-            # pl.setp(ax.get_xticklabels(), visible=False)
             ax.legend()
             ax.grid(1)
     plotter.add_figure(plot_name, fig)
+
+def add_naxis_figure(plotter, plot_name, signal_dim, vecxd_dict, linewidth=1, fmt=''):
+    fig = pl.figure()
+    # check_signal_dict(vecxd_dict)
+    # signal_dim = len(vecxd_dict) - 1
+    subplot_code = signal_dim * 100 + 11
+    ax1 = fig.add_subplot(subplot_code)
+    for i in range(0, signal_dim):
+        ax = None
+        if i == 0:
+            ax = ax1
+        else:
+            ax = fig.add_subplot(subplot_code + i, sharex = ax1)
+        for key in vecxd_dict:
+            ax.plot(vecxd_dict[key][0], vecxd_dict[key][1+i], fmt, label= key , linewidth=linewidth)
+            ax.set_ylabel(chr(120 + i))
+            ax.legend()
+            ax.grid(1)
+    plotter.add_figure(plot_name, fig)
+
+
         
 
 if __name__ == '__main__':

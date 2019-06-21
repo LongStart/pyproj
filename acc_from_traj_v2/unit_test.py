@@ -2,6 +2,8 @@ import unittest
 from dsp import *
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from lie_algebra import *
+
 
 class TestDspFunctions(unittest.TestCase):
 
@@ -14,6 +16,20 @@ class TestDspFunctions(unittest.TestCase):
         q_in = r_in.as_quat().transpose()
         omegas = AngleRate(t_in, q_in)
         print(omegas)
+
+    def test_lie_hat(self):
+        v = np.array([1,2,3])
+        result = np.array([[0, -3, 2],
+                            [3, 0, -1],
+                            [-2, 1, 0]])
+        np.testing.assert_array_equal(hat(v), result)
+
+    def test_lie_hat(self):
+        v = np.array([[1,2,3],[1,2,3]])
+        result = np.array([[[0, -3, 2],
+                            [3, 0, -1],
+                            [-2, 1, 0]]]*2)
+        np.testing.assert_array_equal(hat(v), result)
 
 
 if __name__ == '__main__':
