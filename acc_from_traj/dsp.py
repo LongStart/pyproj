@@ -51,11 +51,26 @@ def Derivative3d(txyz):
     dz_dt = Derivative(txyz[3], txyz[0])
     return np.array([txyz[0][1:-1], dx_dt, dy_dt, dz_dt])
 
-def AngleVelocity(t_in, r_in):
-    dt = t_in[2:] - t_in[:-2]
-    dr = r_in[:-2].inv() * r_in[2:]
-    omega = (dr.as_rotvec().transpose() / dt).transpose()
-    return (t_in[1:-1], omega)
+# def AngleVelocity(t_in, r_in):
+#     dt = t_in[2:] - t_in[:-2]
+#     dr = r_in[:-2].inv() * r_in[2:]
+#     omega = (dr.as_rotvec().transpose() / dt).transpose()
+#     return (t_in[1:-1], omega)
+
+def AngleVelocity(t, wxyz):
+    dt = np.gradient(t)
+    r = R.from_quat(wxyz.transpose())
+    # dr = R.random(len(r))
+    dr = np.zeros((len(r), 3))
+    dr[1:-1] = (r[:-2].inv() * r[2:]).as_rotvec() * 0.5
+    dr[0] = (r[0].inv() * r[1]).as_rotvec()
+    dr[-1] = (r[-2].inv() * r[-1]).as_rotvec()
+
+    dx_dt = dr.transpose()[0] / dt
+    dy_dt = dr.transpose()[1] / dt
+    dz_dt = dr.transpose()[2] / dt
+    print(dt)
+    return np.array([dx_dt, dy_dt, dz_dt])
 
 def DerivativeRot(t_in, r_in):
     from evo.core import lie_algebra
