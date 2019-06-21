@@ -1,0 +1,64 @@
+<head>
+    <script type="text/javascript" async 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    li.L0,
+    li.L1,
+    li.L2,
+    li.L3,
+    li.L5,
+    li.L6,
+    li.L7,
+    li.L8 {
+        list-style-type: decimal !important;
+    }
+</style>
+</head>
+
+<body>
+<p>
+    Euroc vicon room, vicon sensor to body frame:
+    <pre class="prettyprint lang-python linenums">
+        R_BS = np.array([[0.33638, -0.01749,  0.94156],[-0.02078, -0.99972, -0.01114],[0.94150, -0.01582, -0.33665]])
+        T_BS = np.array([0.06901, -0.02781, -0.12395])
+    </pre>
+</p>
+
+<h2>Data Storage</h2>
+<ul>
+    <li>timestamp: t</li>
+    <li>position: xyz</li>
+    <li>orientation: wxyz</li>
+</ul>
+<h3>classes</h3>
+<ul>
+    <li>t: np.array()</li>
+    <li>Seq3d: xyz  np.array()</li>
+    <li>Seq4d: wxyz np.array()</li>
+    <li>Signal3d:   t,Seq3d</li>
+    <li>RotSignal3d: t,Seq4d</li>
+    <li>Trajectory3d: t,Seq3d,Seq4d</li>
+</ul>
+
+<h3>Data type of algorithm</h3>
+<table>
+    <tr>
+        <th>function</th>
+        <th>in</th>
+        <th>out</th>
+    </tr>
+    <tr>
+        <td>Derivative</td>
+        <td>(t,xyz)</td>
+        <td>(t,xyz)</td>
+    </tr>
+    <tr>
+        <td>derivative</td>
+        <td>(t,xyz)</td>
+        <td>(t,xyz)</td>
+    </tr>
+</table>
+
+</body>

@@ -51,6 +51,19 @@ def Derivative3d(txyz):
     dz_dt = Derivative(txyz[3], txyz[0])
     return np.array([txyz[0][1:-1], dx_dt, dy_dt, dz_dt])
 
+def AngleVelocity(t_in, r_in):
+    dt = t_in[2:] - t_in[:-2]
+    dr = r_in[:-2].inv() * r_in[2:]
+    omega = (dr.as_rotvec().transpose() / dt).transpose()
+    return (t_in[1:-1], omega)
+
+def DerivativeRot(t_in, r_in):
+    from evo.core import lie_algebra
+    omegas = AngleVelocity(t_in, r_in)[1]
+    omegas_hat = np.array([np.matrix(lie_algebra.hat(v)) for v in omegas])
+    dr_dt = r_in[1:-1].as_dcm() * omegas_hat
+    return (t_in[1:-1], dr_dt)
+
 # integral
 def Integral3d(txyz):
     x = np.cumsum(txyz[0]*txyz[1])
