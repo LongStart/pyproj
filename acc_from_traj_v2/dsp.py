@@ -27,15 +27,10 @@ def AngleRate(t, xyzw):
 def ToRotationMat(xyzw):
     return R.from_quat(xyzw.transpose()).as_dcm()
 
-def AngleRateInBody(t, xyzw):
-    angle_rate = AngleRate(t, xyzw)
-    rot_inv = R.from_quat(xyzw.transpose()).inv().as_dcm()
-    result = np.empty((np.shape(xyzw)[1], 4))
-    for i in range(len(result)):
-        result[i,0] = t[i]
-        result[i,1:] = rot_inv[i].dot(angle_rate.transpose()[i])
-    return result.transpose()
-
 def StaticRotVec3d(s_xyzw, xyz):
     rot_mat = R.from_quat(s_xyzw).as_dcm()
     return np.array([rot_mat.dot(v) for v in xyz.transpose()]).transpose()
+
+def StaticTransformVec3d(s_xyz_xyzw, xyz):
+    rot_mat = R.from_quat(s_xyz_xyzw[3:]).as_dcm()
+    return np.array([rot_mat.dot(v) + s_xyz_xyzw[:3] for v in xyz.transpose()]).transpose()
