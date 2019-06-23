@@ -31,9 +31,12 @@ def AccelInIMU(t, xyz, xyzw, gravity, body_to_imu_xyz_xyzw):
 
 def InertiaFromTrajectory(t_xyz_xzyw, body_to_imu_xyz_xyzw, gravity):
 
-    body_angle_rate = AngleRateInBody(t_xyz_xzyw[0], t_xyz_xzyw[4:])
-    imu_angle_rate = StaticTransformVec3d(body_to_imu_xyz_xyzw, body_angle_rate)
-    imu_angle_rate = np.vstack((t_xyz_xzyw[0], imu_angle_rate))
+    body_angle_rate_xyz = AngleRateInBody(t_xyz_xzyw[0], t_xyz_xzyw[4:])
+    body_angle_rate_txyz = np.vstack((t_xyz_xzyw[0], body_angle_rate_xyz))
+    imu_angle_rate_xyz = StaticTransformVec3d(body_to_imu_xyz_xyzw, body_angle_rate_xyz)
+    imu_angle_rate_txyz = np.vstack((t_xyz_xzyw[0], imu_angle_rate_xyz))
     
+    temporal_rot = np.array([[0,1,0],[0,0,1],[1,0,0]])
+    imu_angle_rate_txyz[1:] = np.array([temporal_rot.dot(imu_angle_rate_txyz[1:].transpose()[i]) for i in range(len(t_xyz_xzyw[0]))]).transpose()
     imu_acceleration = AccelInIMU(t_xyz_xzyw[0], t_xyz_xzyw[1:4], t_xyz_xzyw[4:], gravity, body_to_imu_xyz_xyzw)
-    return (imu_angle_rate, imu_acceleration)
+    return (imu_angle_rate_txyz, imu_acceleration)

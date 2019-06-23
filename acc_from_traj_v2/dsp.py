@@ -14,9 +14,9 @@ def AngleRate(t, xyzw):
     dt = np.gradient(t)
     r = R.from_quat(xyzw.transpose())
     dr = np.zeros((len(r), 3))
-    dr[1:-1] = (r[:-2].inv() * r[2:]).as_rotvec() * 0.5
-    dr[0] = (r[0].inv() * r[1]).as_rotvec()
-    dr[-1] = (r[-2].inv() * r[-1]).as_rotvec()
+    dr[1:-1] = (r[2:] * r[:-2].inv()).as_rotvec() * 0.5
+    dr[0] = (r[1] * r[0].inv() ).as_rotvec()
+    dr[-1] = (r[-1] * r[-2].inv()).as_rotvec()
 
     dx_dt = dr.transpose()[0] / dt
     dy_dt = dr.transpose()[1] / dt
