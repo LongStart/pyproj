@@ -35,7 +35,7 @@ def StaticTransformVec3d(s_xyz_xyzw, xyz):
     rot_mat = R.from_quat(s_xyz_xyzw[3:]).as_dcm()
     return np.array([rot_mat.dot(v) + s_xyz_xyzw[:3] for v in xyz.transpose()]).transpose()
 
-def SmoothAmbiguousQuaternion(xyzw_in):
+def ContiguousQuaternion(xyzw_in):
     xyzw_out = np.array(xyzw_in)
     for i in range(1, np.shape(xyzw_in)[1]):
         prev_q = xyzw_out[:, i - 1]

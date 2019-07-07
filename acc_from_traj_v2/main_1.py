@@ -57,7 +57,7 @@ if __name__ == '__main__':
     # print(euler.transpose()[1:10])
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    q_viz_txyzw = np.vstack([raw_gt_pose[0], SmoothAmbiguousQuaternion(raw_gt_pose[4:])])
+    q_viz_txyzw = np.vstack([raw_gt_pose[0], ContiguousQuaternion(raw_gt_pose[4:])])
 
     body_angle_rate_from_imu = np.vstack((raw_imu_angle_rate[0], StaticTransformVec3d(imu_to_vicon_xyz_xyzw, raw_imu_angle_rate[1:])))
     
