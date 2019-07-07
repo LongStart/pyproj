@@ -57,7 +57,7 @@ if __name__ == '__main__':
     # print(euler.transpose()[1:10])
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    q_viz_txyzw = np.vstack([raw_gt_pose[0], raw_gt_pose[4:]])
+    q_viz_txyzw = np.vstack([raw_gt_pose[0], SmoothAmbiguousQuaternion(raw_gt_pose[4:])])
 
     body_angle_rate_from_imu = np.vstack((raw_imu_angle_rate[0], StaticTransformVec3d(imu_to_vicon_xyz_xyzw, raw_imu_angle_rate[1:])))
     
@@ -71,10 +71,10 @@ if __name__ == '__main__':
     acc = {
         'from_traj': imu_acc_from_traj,
         'from_imu': raw_imu_acc}
-    print(gyro.keys()[0])
-    print(acc.keys()[0])
-    add_3axis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')
-    add_naxis_figure(plotter, "quat", quat, fmt='.-')
+    # print(gyro.keys()[0])
+    # print(acc.keys()[0])
+    add_naxis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')
+    add_naxis_figure(plotter, "quat", quat, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=0.3, fmt='-')
     
     plotter.show()
