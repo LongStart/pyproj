@@ -7,10 +7,10 @@ from scipy.spatial.transform import Rotation as R
 from scipy.ndimage.filters import uniform_filter1d
 from ros_io import *
 from inertia_from_traj import *
-# from signal import Trajectory3d
+from space_signal import *
 import PlotCollection
 from add_3axis_figure import *
-from dsp import *
+from core.dsp import *
 
 if __name__ == '__main__':
     if(len(argv) < 3):
@@ -41,36 +41,43 @@ if __name__ == '__main__':
 
     raw_gt_pose = PoseFromTransformStamped(transform_msgs)
     CorrectBiasedStamp(raw_gt_pose[0])
+    raw_gt_pose = Trajectory3d(raw_gt_pose)
 
-    raw_imu_angle_rate = AngleRateFromIMU(imu_msgs)
-    raw_imu_acc = AccelerationFromIMU(imu_msgs)
+    raw_imu_angle_rate = Signal3d(AngleRateFromIMU(imu_msgs))
+    raw_imu_acc = Signal3d(AccelerationFromIMU(imu_msgs))
     # raw_imu_angle_rate[1:] = uniform_filter1d(raw_imu_angle_rate[1:], 100, axis=1)
     # raw_imu_acc[1:] = uniform_filter1d(raw_imu_acc[1:], 100, axis=1)
     
-    (imu_angle_rate, imu_acc_from_traj) = InertiaFromTrajectory(raw_gt_pose, vicon_to_imu_xyz_xyzw, gravity)
+    (imu_angle_rate, imu_acc_from_traj) = InertiaFromTrajectory(raw_gt_pose.t_xyz_xyzw(), vicon_to_imu_xyz_xyzw, gravity)
+    imu_angle_rate = Signal3d(imu_angle_rate)
+    imu_acc_from_traj = Signal3d(imu_acc_from_traj)
     # imu_angle_rate[1:] = uniform_filter1d(imu_angle_rate[1:], 50, axis=1)
     # imu_acc_from_traj[1:] = uniform_filter1d(imu_acc_from_traj[1:], 50, axis=1)
 
 
-    euler = R.from_quat(raw_gt_pose[4:].transpose()).as_euler('xyz').transpose()
-    euler = np.vstack([raw_gt_pose[0], euler])
+    euler_xyz = R.from_quat(raw_gt_pose.xyzw().transpose()).as_euler('xyz').transpose()
+    euler = Signal3d.from_t_xyz(raw_gt_pose.t(), euler_xyz)
+    # euler = np.vstack([raw_gt_pose.t(), euler])
     # print(euler.transpose()[1:10])
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    q_viz_txyzw = np.vstack([raw_gt_pose[0], ContiguousQuaternion(raw_gt_pose[4:])])
+    # q_viz_txyzw = np.vstack([raw_gt_pose.t(), ContiguousQuaternion(raw_gt_pose.xyzw())])
+    raw_gt_pose.xyzw( ContiguousQuaternion(raw_gt_pose.xyzw()) )
 
-    body_angle_rate_from_imu = np.vstack((raw_imu_angle_rate[0], StaticTransformVec3d(imu_to_vicon_xyz_xyzw, raw_imu_angle_rate[1:])))
+    # body_angle_rate_from_imu = np.vstack((raw_imu_angle_rate[0], StaticTransformVec3d(imu_to_vicon_xyz_xyzw, raw_imu_angle_rate[1:])))
+    body_angle_rate_from_imu = Signal3d.from_t_xyz(
+        raw_imu_angle_rate.t(), StaticTransformVec3d(imu_to_vicon_xyz_xyzw, raw_imu_angle_rate.xyz()))
     
-    quat = {'q_from_traj': q_viz_txyzw}
+    quat = {'q_from_traj': raw_gt_pose.t_xyzw()}
     gyro = {
         # 'angle_rate_from_atraj': body_angle_rate,
         # 'euler': euler,
         # 'body_from_imu': body_angle_rate_from_imu,
-        'from_traj': imu_angle_rate,
-        'from_imu': raw_imu_angle_rate}
+        'from_traj': imu_angle_rate.t_xyz(),
+        'from_imu': raw_imu_angle_rate.t_xyz()}
     acc = {
-        'from_traj': imu_acc_from_traj,
-        'from_imu': raw_imu_acc}
+        'from_traj': imu_acc_from_traj.t_xyz(),
+        'from_imu': raw_imu_acc.t_xyz()}
     # print(gyro.keys()[0])
     # print(acc.keys()[0])
     add_naxis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')

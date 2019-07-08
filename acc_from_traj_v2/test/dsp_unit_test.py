@@ -3,6 +3,7 @@ from dsp import *
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from lie_algebra import *
+from trajectory_signal import Trajectory3d
 
 
 class TestDspFunctions(unittest.TestCase):
