@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 # from core.lie_algebra import *
-from space_signal import Trajectory3d
+from core.space_signal import Trajectory3d
 
 
 class TestTrajFunctions(unittest.TestCase):

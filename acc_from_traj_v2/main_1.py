@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.ndimage.filters import uniform_filter1d
 from ros_io import *
 from inertia_from_traj import *
-from space_signal import *
+from core.space_signal import *
 import PlotCollection
 from add_3axis_figure import *
 from core.dsp import *
