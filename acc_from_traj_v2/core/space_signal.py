@@ -1,43 +1,34 @@
 import numpy as np
 
-class Sequence():
-    def __init__()
-
 class SequenceXd():
     def __init__(self, dim, data):
         assert np.shape(data) == (dim, len(data[0]))
         self._data = data
         self._len = len(data[0])
 
-    def set(self, data):
+    def __call__(self, data=None):
+        if data is None:
+            return np.array(self._data)
         assert np.shape(self._data) == np.shape(data)
         self._data = data
-    
-    def get(self):
-        return self._data
 
 class TimeSequence():
-    def __init__(self, data):
-        assert np.shape(data) == (len(data),)
+    def __init__(self, dim, data):
         self._data = data
 
-    def set(self, data):
+    def __call__(self, data=None):
+        if data is None:
+            return np.array(self._data)
         assert np.shape(self._data) == np.shape(data)
         self._data = data
-    
-    def get(self):
-        return self._data
+        return np.array(self._data)
 
 class Signal3d():
-    def __init__(self, t_vals):
+    def __init__(self, t_xyz):
         self.dim = 3
-        assert np.shape(t_vals) == (self.dim + 1, len(t_vals[0]))
-        self.t = TimeSequence(1, t_vals[0])
-        self.vals = SequenceXd(self.dim, t_vals[1:])
-
-    def __getattribute__(self, name):
-        if name == 't':
-            return self.t
+        assert np.shape(t_xyz) == (self.dim + 1, len(t_xyz[0]))
+        self.t = TimeSequence(1, t_xyz[0])
+        self.xyz = SequenceXd(self.dim, t_xyz[1:])
 
     def __call__(self):
         return np.vstack((self.t(), self.xyz()))
