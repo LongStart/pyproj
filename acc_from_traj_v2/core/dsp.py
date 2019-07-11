@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from lie_algebra import hat
+from scipy import interpolate
 
 def Derivative3d(t, xyz):
     dt = np.gradient(t)
@@ -23,6 +24,13 @@ def AngleRate(t, xyzw):
     dz_dt = dr.transpose()[2] / dt
     
     return np.array([dx_dt, dy_dt, dz_dt])
+
+def Interpolate(t_vals, t):
+	f = interpolate.interp1d(t_vals[0], t_vals[1:], assume_sorted=True, bounds_error=False, fill_value=0.)
+	return np.vstack((t, f(t)))
+
+def Magnitude(nd_seq):
+    return np.array([v.dot(v)**0.5 for v in nd_seq.transpose()])
 
 def ToRotationMat(xyzw):
     return R.from_quat(xyzw.transpose()).as_dcm()

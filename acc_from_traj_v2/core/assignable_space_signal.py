@@ -24,8 +24,12 @@ class TimeSequence(Sequence):
         self._data = data
 
 class SignalXd(object):
-    def __init__(self, t_vals, val_name, dim):
-        assert np.shape(t_vals) == (dim + 1, len(t_vals[0]))
+    def __init__(self, t_vals, val_name='vals', dim=None):
+        if dim is None:
+            dim = np.shape(t_vals)[0] - 1
+            assert dim > 0
+        else:
+            assert np.shape(t_vals) == (dim + 1, len(t_vals[0]))
         super(SignalXd, self).__setattr__('_t', TimeSequence(t_vals[0]))
         super(SignalXd, self).__setattr__('_' + val_name, SequenceXd(dim, t_vals[1:]))
         super(SignalXd, self).__setattr__('_dim', dim)
@@ -47,6 +51,11 @@ class SignalXd(object):
         if vals is None:
             vals = np.zeros((cls.dim(), len(t)))
         return np.vstack((t, vals))
+
+    @classmethod
+    def from_t_vals(cls, t, vals=None, val_name='vals', dim=None):
+        assert(dim is not None or vals is not None)
+        return cls(SignalXd.combine_t_vals(t, vals), val_name, dim)
 
 class Signal3d(SignalXd):
     def __init__(self, t_vals):
