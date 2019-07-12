@@ -44,12 +44,12 @@ if __name__ == '__main__':
 
     raw_imu_angle_rate = AngleRateFromIMU(imu_msgs)
     raw_imu_acc = AccelerationFromIMU(imu_msgs)
-    # raw_imu_angle_rate[1:] = uniform_filter1d(raw_imu_angle_rate[1:], 100, axis=1)
-    # raw_imu_acc[1:] = uniform_filter1d(raw_imu_acc[1:], 100, axis=1)
+    raw_imu_angle_rate[1:] = uniform_filter1d(raw_imu_angle_rate[1:], 100, axis=1)
+    raw_imu_acc[1:] = uniform_filter1d(raw_imu_acc[1:], 300, axis=1)
     
     (imu_angle_rate, imu_acc_from_traj) = InertiaFromTrajectory(raw_gt_pose, vicon_to_imu_xyz_xyzw, gravity)
-    # imu_angle_rate[1:] = uniform_filter1d(imu_angle_rate[1:], 50, axis=1)
-    # imu_acc_from_traj[1:] = uniform_filter1d(imu_acc_from_traj[1:], 50, axis=1)
+    imu_angle_rate[1:] = uniform_filter1d(imu_angle_rate[1:], 50, axis=1)
+    imu_acc_from_traj[1:] = uniform_filter1d(imu_acc_from_traj[1:], 150, axis=1)
 
 
     euler = R.from_quat(raw_gt_pose[4:].transpose()).as_euler('xyz').transpose()
@@ -73,8 +73,8 @@ if __name__ == '__main__':
         'from_imu': raw_imu_acc}
     print(gyro.keys()[0])
     print(acc.keys()[0])
-    add_3axis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')
+    add_3axis_figure(plotter, "angle_rate", gyro, linewidth=1., fmt='-')
     add_naxis_figure(plotter, "quat", quat, fmt='.-')
-    add_naxis_figure(plotter, "acc", acc, linewidth=0.3, fmt='-')
+    add_naxis_figure(plotter, "acc", acc, linewidth=1., fmt='-')
     
     plotter.show()
