@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from lie_algebra import hat
+from scipy import interpolate
 
 def Derivative3d(t, xyz):
     dt = np.gradient(t)
@@ -24,6 +25,14 @@ def AngleRate(t, xyzw):
     
     return np.array([dx_dt, dy_dt, dz_dt])
 
+def Interpolate(t_vals, t):
+	f = interpolate.interp1d(t_vals[0], t_vals[1:], assume_sorted=True, bounds_error=False, fill_value=0.)
+        
+	return np.vstack((t, f(t)))
+
+def Magnitude(nd_seq):
+    return np.array([v.dot(v)**0.5 for v in nd_seq.transpose()])
+
 def ToRotationMat(xyzw):
     return R.from_quat(xyzw.transpose()).as_dcm()
 
@@ -34,3 +43,12 @@ def StaticRotVec3d(s_xyzw, xyz):
 def StaticTransformVec3d(s_xyz_xyzw, xyz):
     rot_mat = R.from_quat(s_xyz_xyzw[3:]).as_dcm()
     return np.array([rot_mat.dot(v) + s_xyz_xyzw[:3] for v in xyz.transpose()]).transpose()
+
+def ContiguousQuaternion(xyzw_in):
+    xyzw_out = np.array(xyzw_in)
+    for i in range(1, np.shape(xyzw_in)[1]):
+        prev_q = xyzw_out[:, i - 1]
+        this_q = xyzw_out[:, i]
+        if prev_q.dot(this_q) < prev_q.dot(-this_q):
+            xyzw_out[:, i] = -this_q
+    return xyzw_out
