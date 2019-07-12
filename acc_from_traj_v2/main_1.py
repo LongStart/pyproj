@@ -43,16 +43,6 @@ if __name__ == '__main__':
     CorrectBiasedStamp(raw_gt_pose[0])
     raw_gt_pose = Trajectory3d(raw_gt_pose)
 
-<<<<<<< HEAD
-    raw_imu_angle_rate = AngleRateFromIMU(imu_msgs)
-    raw_imu_acc = AccelerationFromIMU(imu_msgs)
-    raw_imu_angle_rate[1:] = uniform_filter1d(raw_imu_angle_rate[1:], 100, axis=1)
-    raw_imu_acc[1:] = uniform_filter1d(raw_imu_acc[1:], 300, axis=1)
-    
-    (imu_angle_rate, imu_acc_from_traj) = InertiaFromTrajectory(raw_gt_pose, vicon_to_imu_xyz_xyzw, gravity)
-    imu_angle_rate[1:] = uniform_filter1d(imu_angle_rate[1:], 50, axis=1)
-    imu_acc_from_traj[1:] = uniform_filter1d(imu_acc_from_traj[1:], 150, axis=1)
-=======
     raw_imu_angle_rate = Signal3d(AngleRateFromIMU(imu_msgs))
     raw_imu_acc = Signal3d(AccelerationFromIMU(imu_msgs))
     # raw_imu_angle_rate[1:] = uniform_filter1d(raw_imu_angle_rate[1:], 100, axis=1)
@@ -63,7 +53,6 @@ if __name__ == '__main__':
     imu_acc_from_traj = Signal3d(imu_acc_from_traj)
     # imu_angle_rate[1:] = uniform_filter1d(imu_angle_rate[1:], 50, axis=1)
     # imu_acc_from_traj[1:] = uniform_filter1d(imu_acc_from_traj[1:], 50, axis=1)
->>>>>>> 09b1a820172553c6abd51f5f24cff82055e8eda0
 
 
     euler_xyz = R.from_quat(raw_gt_pose.xyzw.transpose()).as_euler('xyz').transpose()
@@ -87,15 +76,6 @@ if __name__ == '__main__':
         'from_traj': imu_angle_rate.t_xyz,
         'from_imu': raw_imu_angle_rate.t_xyz}
     acc = {
-<<<<<<< HEAD
-        'from_traj': imu_acc_from_traj,
-        'from_imu': raw_imu_acc}
-    print(gyro.keys()[0])
-    print(acc.keys()[0])
-    add_3axis_figure(plotter, "angle_rate", gyro, linewidth=1., fmt='-')
-    add_naxis_figure(plotter, "quat", quat, fmt='.-')
-    add_naxis_figure(plotter, "acc", acc, linewidth=1., fmt='-')
-=======
         'from_traj': imu_acc_from_traj.t_xyz,
         'from_imu': raw_imu_acc.t_xyz}
     # print(gyro.keys()[0])
@@ -103,6 +83,5 @@ if __name__ == '__main__':
     add_naxis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')
     add_naxis_figure(plotter, "quat", quat, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=0.3, fmt='-')
->>>>>>> 09b1a820172553c6abd51f5f24cff82055e8eda0
     
     plotter.show()
