@@ -25,7 +25,7 @@ def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1, fmt=''):
             ax.grid(1)
     plotter.add_figure(plot_name, fig)
 
-def add_naxis_figure(plotter, plot_name, vecxd_dict, linewidth=1, fmt=''):
+def add_naxis_figure(plotter, plot_name, vecxd_dict, linewidth=1, fmt='', markersize=1.):
     fig = pl.figure()
     check_signal_dict(vecxd_dict)
     signal_dim = len(vecxd_dict.values()[0]) - 1
@@ -38,7 +38,7 @@ def add_naxis_figure(plotter, plot_name, vecxd_dict, linewidth=1, fmt=''):
         else:
             ax = fig.add_subplot(subplot_code + i, sharex = ax1)
         for key in vecxd_dict:
-            ax.plot(vecxd_dict[key][0], vecxd_dict[key][1+i], fmt, label= key , linewidth=linewidth)
+            ax.plot(vecxd_dict[key][0], vecxd_dict[key][1+i], fmt, label= key , linewidth=linewidth, markersize=markersize)
             ax.set_ylabel(chr(120 + i))
             ax.legend()
             ax.grid(1)

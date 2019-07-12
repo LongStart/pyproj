@@ -47,6 +47,10 @@ if __name__ == '__main__':
         'angle_rate_p20': raw_imus_angle_rate[0].t_xyz,
         'angle_rate_s9': raw_imus_angle_rate[1].t_xyz}
 
+    angle_rate_y = {
+        'angle_rate_p20': np.vstack((raw_imus_angle_rate[0].t, raw_imus_angle_rate[0].xyz[1])) ,
+        'angle_rate_s9': np.vstack((raw_imus_angle_rate[1].t, raw_imus_angle_rate[1].xyz[1]))}
+
     mag_angle_rate = {
             'mag_angle_rate_p20': evensample_mag[0].t_vals,
             'mag_angle_rate_s9': evensample_mag[1].t_vals}
@@ -55,9 +59,11 @@ if __name__ == '__main__':
             'corr': corr.t_vals}
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.8, fmt='-')
+    add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.8, fmt='.-')
     add_naxis_figure(plotter, "mag angle rate", mag_angle_rate, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "correlation", correlation, linewidth=0.8, fmt='.-')
+    add_naxis_figure(plotter, "angle_rate_y", angle_rate_y, markersize=35, fmt='_')
+    
     plotter.show()
 
     
