@@ -27,17 +27,17 @@ if __name__ == '__main__':
                 AngleRateFromIMU(
                     ReadTopicMsg(bag_filename, imu_topic))))
 
-    mag_angle_rate = [SignalXd.from_t_vals(sig.t, Magnitude(sig.xyz)) for sig in raw_imus_angle_rate]
+    mag_angle_rate = [Signal1d.from_t_x(sig.t, Magnitude(sig.xyz)) for sig in raw_imus_angle_rate]
 
     resample_t = np.linspace(raw_imus_angle_rate[0].t[0], raw_imus_angle_rate[0].t[-1], len(raw_imus_angle_rate[0].t))
-    evensample_mag = [SignalXd(Interpolate(sig.t_vals, resample_t)) for sig in mag_angle_rate]
+    evensample_mag = [Signal1d(Interpolate(sig.t_x, resample_t)) for sig in mag_angle_rate]
 
     corr_t = np.arange(-len(resample_t) + 1, len(resample_t))
-    corr = np.correlate(evensample_mag[0].vals[0], evensample_mag[1].vals[0], mode='full')
+    corr = np.correlate(evensample_mag[0].x, evensample_mag[1].x, mode='full')
     # print(corr)
-    corr = SignalXd.from_t_vals(corr_t, corr)
-    dt = corr.t[np.argmax(corr.vals[0])] * (resample_t[1] - resample_t[0])
-    print(np.argmax(corr.vals[0]))
+    corr = Signal1d.from_t_x(corr_t, corr)
+    dt = corr.t[np.argmax(corr.x)] * (resample_t[1] - resample_t[0])
+    print(np.argmax(corr.x))
     print(dt)
     # quit()
     evensample_mag[0].t = evensample_mag[0].t - dt
@@ -52,11 +52,11 @@ if __name__ == '__main__':
         'angle_rate_s9': np.vstack((raw_imus_angle_rate[1].t, raw_imus_angle_rate[1].xyz[1]))}
 
     mag_angle_rate = {
-            'mag_angle_rate_p20': evensample_mag[0].t_vals,
-            'mag_angle_rate_s9': evensample_mag[1].t_vals}
+            'mag_angle_rate_p20': evensample_mag[0].t_x,
+            'mag_angle_rate_s9': evensample_mag[1].t_x}
 
     correlation = {
-            'corr': corr.t_vals}
+            'corr': corr.t_x}
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
     add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.8, fmt='.-')

@@ -27,6 +27,7 @@ def AngleRate(t, xyzw):
 
 def Interpolate(t_vals, t):
 	f = interpolate.interp1d(t_vals[0], t_vals[1:], assume_sorted=True, bounds_error=False, fill_value=0.)
+        
 	return np.vstack((t, f(t)))
 
 def Magnitude(nd_seq):

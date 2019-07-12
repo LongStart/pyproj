@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 # from core.lie_algebra import *
 from core.assignable_space_signal import Signal3d
+from core.assignable_space_signal import Signal1d
 from core.assignable_space_signal import Trajectory3d
 
 
@@ -23,7 +24,20 @@ class TestTrajFunctions(unittest.TestCase):
         sig.t = raw_data[1]
         np.testing.assert_array_equal(sig.t, raw_data[1])
 
-    def test_signal_3d(self):
+        sig = Signal3d.from_t_xyz(raw_data[0])
+        sig = Signal3d.from_t_xyz(raw_data[0])
+
+    def test_signal_1d(self):
+        t = np.array([1,2,3,4])
+
+        x = np.array([2,4,6,8])
+
+        sig = Signal1d.from_t_x(t)
+        sig = Signal1d.from_t_x(t, x)
+        sig = Signal1d(np.vstack((t,x)))
+
+
+    def test_traj_3d(self):
         t = np.array([1,2,3,4])
 
         xyz = np.array([

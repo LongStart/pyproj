@@ -1,27 +1,21 @@
 import numpy as np
 
-class Sequence(object):
-    def __init__(self):
-        self._data = None
+class SequenceXd(object):
+    def __init__(self, dim, data):
+        self._data = np.array([data]) if data.ndim == 1 else data
 
     def set(self, data):
+        if data.ndim == 1:
+            assert np.shape(self._data) == (1,len(data))
+            self._data = np.array([data])
+            return
         assert np.shape(self._data) == np.shape(data)
         self._data = data
     
     def get(self):
+        if np.shape(self._data)[0] == 1:
+            return np.array(self._data[0])
         return np.array(self._data)
-
-class SequenceXd(Sequence):
-    def __init__(self, dim, data):
-        super(SequenceXd, self).__init__()
-        assert np.shape(data) == (dim, len(data[0]))
-        self._data = data
-        self._len = len(data[0])
-
-class TimeSequence(Sequence):
-    def __init__(self, data):
-        assert np.shape(data) == (len(data),)
-        self._data = data
 
 class SignalXd(object):
     def __init__(self, t_vals, val_name='vals', dim=None):
@@ -30,7 +24,7 @@ class SignalXd(object):
             assert dim > 0
         else:
             assert np.shape(t_vals) == (dim + 1, len(t_vals[0]))
-        super(SignalXd, self).__setattr__('_t', TimeSequence(t_vals[0]))
+        super(SignalXd, self).__setattr__('_t', SequenceXd(1, t_vals[0]))
         super(SignalXd, self).__setattr__('_' + val_name, SequenceXd(dim, t_vals[1:]))
         super(SignalXd, self).__setattr__('_dim', dim)
         super(SignalXd, self).__setattr__('_val_name', val_name)
@@ -46,37 +40,43 @@ class SignalXd(object):
     def __setattr__(self, name, value):
         self.__getattribute__('_' + name).set(value)
 
-    @classmethod
-    def combine_t_vals(cls, t, vals=None):
+    @staticmethod
+    def from_t_vals(cls, t, vals=None):
         if vals is None:
-            vals = np.zeros((cls.dim(), len(t)))
-        return np.vstack((t, vals))
+            vals = np.zeros((cls.__dim__, len(t)))
+        return cls(np.vstack((t, vals)))
 
-    @classmethod
-    def from_t_vals(cls, t, vals=None, val_name='vals', dim=None):
-        assert(dim is not None or vals is not None)
-        return cls(SignalXd.combine_t_vals(t, vals), val_name, dim)
+    def init_signal(obj, t_vals):
+        super(obj.__class__, obj).__init__(t_vals, obj.__class__.__val_name__, obj.__class__.__dim__)
+
+def RegisterSignalClass(cls):
+    setattr(cls, 'from_t_' + cls.__val_name__, classmethod(SignalXd.from_t_vals))
+
+class Signal1d(SignalXd):
+    __val_name__ = 'x'
+    __dim__ = 1
+    def __init__(self, t_vals):
+        super(self.__class__, self).__init__(t_vals, self.__class__.__val_name__, self.__class__.__dim__)
+RegisterSignalClass(Signal1d)
 
 class Signal3d(SignalXd):
+    __val_name__ = 'xyz'
+    __dim__ = 3
     def __init__(self, t_vals):
-        super(Signal3d, self).__init__(t_vals, 'xyz', 3)
-
-    @classmethod
-    def from_t_xyz(cls, t, vals=None):
-        return cls(SignalXd.combine_t_vals(t, vals))
+        super(self.__class__, self).__init__(t_vals, self.__class__.__val_name__, self.__class__.__dim__)
+RegisterSignalClass(Signal3d)
 
 class Signal4d(SignalXd):
+    __val_name__ = 'xyzw'
+    __dim__ = 4
     def __init__(self, t_vals):
-        super(Signal3d, self).__init__(t_vals, 'xyzw', 4)
-
-    @classmethod
-    def from_t_xyzw(cls, t, vals=None):
-        return cls(SignalXd.combine_t_vals(t, vals))
+        super(self.__class__, self).__init__(t_vals, self.__class__.__val_name__, self.__class__.__dim__)
+RegisterSignalClass(Signal4d)
         
 class Trajectory3d(object):
     def __init__(self, t_vals):
         assert np.shape(t_vals) == (8, len(t_vals[0]))
-        super(Trajectory3d, self).__setattr__('_t', TimeSequence(t_vals[0]))
+        super(Trajectory3d, self).__setattr__('_t', SequenceXd(1, t_vals[0]))
         super(Trajectory3d, self).__setattr__('_xyz', SequenceXd(3, t_vals[1:4]))
         super(Trajectory3d, self).__setattr__('_xyzw', SequenceXd(4, t_vals[4:]))
 
