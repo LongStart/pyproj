@@ -3,17 +3,17 @@ from scipy.spatial.transform import Rotation as R
 from scipy.optimize import least_squares
 import sys
 
-def GenerateData(v1, v2, sigma=0.1, num=10):
-    n_1 = v1 + np.random.normal(v1, sigma, (num,3))
-    n_2 = v2 + np.random.normal(v2, sigma, (num,3))
+def GenerateNoiseData(v1, v2, sigma=0.1):
+    n_1 = v1 + np.random.normal(0, sigma, np.shape(v1))
+    n_2 = v2 + np.random.normal(0, sigma, np.shape(v2))
     return n_1, n_2
 
 def GenerateDataByRotVec(rotvec, num=10):
-    # v_2 = np.random.random((num, 3))
-    v_2 = np.array([
-        [1,0,0],
-        [0,1,0],
-        [0,0,1]])
+    v_2 = np.random.random((num, 3))
+    # v_2 = np.array([
+    #     [1,0,0],
+    #     [0,1,0],
+    #     [0,0,1]])
     rot = R.from_rotvec(rotvec)
     v_1 = rot.apply(v_2)
     return v_1, v_2
@@ -61,7 +61,7 @@ class Problem(object):
 
 def gauss_newton(problem, guess):
     x = guess
-    for i in range(0, 10):
+    for i in range(0, 20):
         j = problem.jac(x)
         b = -j.transpose().dot(problem.f(x))
         H = j.transpose().dot(j)
@@ -163,7 +163,8 @@ if __name__ == "__main__":
         static_test()
         quit()
 
-    v1, v2 = GenerateDataByRotVec([1,1,1], num=3)
+    v1, v2 = GenerateDataByRotVec([1,1,1], num=30000)
+    (v1, v2) = GenerateNoiseData(v1, v2)
 
     p = Problem(v1, v2)
     
@@ -171,18 +172,16 @@ if __name__ == "__main__":
     # print(p.jac(guess))
     
     # print(p.d_err(guess))
-    print('residual')
-    print(p.f(guess))
-    print('j_residual')
-    print(p.jac(guess))
+    # print('residual')
+    # print(p.f(guess))
+    # print('j_residual')
+    # print(p.jac(guess))
     res = gauss_newton(p, guess)
     # print('compare: {}#{}'.format(R.from_rotvec(res).apply(v2[0]), v1[0]))
     
     # print(p.f(guess))
     # print(p.jac(guess).transpose().dot(p.f(guess)) + p.f(guess).transpose().dot(p.jac(guess)))
     # quit()
-    res = least_squares(p.f, guess, jac=p.jac, method='lm',verbose=2, x_scale='jac')
+    # res = least_squares(p.f, guess, jac=p.jac, method='lm',verbose=2, x_scale='jac')
     # res = least_squares(p.f, guess, method='lm',verbose=2)
-    print(res.x)
-
-    print('start')
+    # print(res.x)
