@@ -39,6 +39,15 @@ class Problem(object):
         return (rot.apply(self.v2s) - self.v1s).ravel()
         # return 
 
+    def numerical_jac(self, x):
+        eps = 1e-8
+        partial_d = []
+        for i in range(len(x)):
+            x_inc = np.array(x)
+            x_inc[i] += eps
+            partial_d.append((self.f(x_inc) - self.f(x))/eps)
+        return np.vstack(partial_d).transpose()
+
     def rjac(self, x):
         rot = R.from_rotvec(x)
         jacs = np.array([-rot.as_dcm().dot(hat(v)) for v in self.v2s])

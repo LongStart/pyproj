@@ -17,7 +17,7 @@ def GyroRotationEstimation(gyro_seq1, gyro_seq2):
     from core.least_square import gauss_newton
 
     p = Problem(gyro_seq1, gyro_seq2)
-    return gauss_newton(p, [0.1,  0.,  0], step=20)
+    return gauss_newton(p, [0.1,0,0, 0,0,0], step=20)
 
 def CorrespondenceData(signal1, signal2):
     start1 = 0
@@ -45,6 +45,7 @@ def CorrespondenceData(signal1, signal2):
     return (signal1.xyz[:,start1:end1], signal2.xyz[:, start2:end2])
 
 if __name__ == '__main__':
+    np.set_printoptions(precision=4, linewidth=np.inf)
     if(len(argv) < 2):
         print("Example: python dual_imu_time_diff.py bag_path ")
         quit()
@@ -85,7 +86,10 @@ if __name__ == '__main__':
     print("shape: {}".format(np.shape(corresed_gyro0)))
     print("shape: {}".format(np.shape(corresed_gyro1)))
     # quit()
-    r_1_2 = R.from_rotvec(GyroRotationEstimation(corresed_gyro0, corresed_gyro1))
+    # estimation = GyroRotationEstimation(corresed_gyro0, corresed_gyro1)
+    # r_1_2 = R.from_rotvec(estimation[0:3])
+    r_1_2 = R.from_rotvec([-0.03887825880536361, -3.111278018507698, -0.0064542521587999885])
+    bias_sum = np.array([0.007988849050496289, -0.049053012641407774, -0.014982668604737787])
 
     angle_rate_rotated = Signal3d(raw_imus_angle_rate[1].t_xyz)
     angle_rate_rotated.xyz = r_1_2.apply (raw_imus_angle_rate[1].xyz.transpose()).transpose()
@@ -93,7 +97,7 @@ if __name__ == '__main__':
 
     angle_rate = {
         'angle_rate_p20': raw_imus_angle_rate[0].t_xyz,
-        'angle_rate_s9': raw_imus_angle_rate[1].t_xyz,
+        # 'angle_rate_s9': raw_imus_angle_rate[1].t_xyz,
         'angle_rate_s9_roted': angle_rate_rotated.t_xyz,}
 
     angle_rate_y = {
@@ -108,7 +112,7 @@ if __name__ == '__main__':
             'corr': corr.t_x}
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.5, fmt='-')
+    add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "mag angle rate", mag_angle_rate, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "correlation", correlation, linewidth=0.8, fmt='.-')
     add_naxis_figure(plotter, "angle_rate_y", angle_rate_y, markersize=35, fmt='_')

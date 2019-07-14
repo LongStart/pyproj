@@ -21,7 +21,10 @@ def gauss_newton(problem, guess, step=20):
         H = j.transpose().dot(j)
         update = np.linalg.solve(H, b)
         print('x: {}, ud: {}, dcost_dx:{}, cost: {}'.format(x, update, problem.d_cost_dx(x), problem.cost(x)))
-        x = (R.from_rotvec(update) * R.from_rotvec(x)).as_rotvec()
+
+        (rotvec, bias_sum) = Problem.parse_space_vector(update)
+        x[0:3] = (R.from_rotvec(rotvec) * R.from_rotvec(x[0:3])).as_rotvec()
+        x[3:6] += bias_sum
     return x
 
 class Problem(object):
@@ -29,13 +32,23 @@ class Problem(object):
         self.v1s = v1s.transpose()
         self.v2s = v2s.transpose()
 
+    @staticmethod
+    def parse_space_vector(x):
+        rotvec = np.array(x[0:3])
+        bias_sum = np.array(x[3:6])
+        return (rotvec, bias_sum)
+
     def f(self, x):
-        rot = R.from_rotvec(x)
-        return (rot.apply(self.v2s) - self.v1s).ravel()
+        (rotvec, bias_sum) = Problem.parse_space_vector(x)
+        rot = R.from_rotvec(rotvec)
+        return (rot.apply(self.v2s) - self.v1s - bias_sum).ravel()
 
     def jac(self, x):
-        rot = R.from_rotvec(x)
-        jacs = np.vstack([-hat(rot.apply(v)) for v in self.v2s])
+        (rotvec, bias_sum) = Problem.parse_space_vector(x)
+        rot = R.from_rotvec(rotvec)
+        jacs = np.vstack([
+            np.hstack([-hat(rot.apply(v)), -np.eye(3)]) 
+            for v in self.v2s])
         return jacs
 
     def d_cost_dx(self, x):
