@@ -18,7 +18,7 @@ if __name__ == "__main__":
     for i in range(bag_num): 
         in_bagnames.append(argv[1 + i])
         name_prefixs.append(os.path.basename(in_bagnames[i]).split('_')[0])
-        output_bagname += (name_prefixs[i] + '_')
+        output_bagname += (os.path.basename(in_bagnames[i]) + '_')
     output_bagname += 'merged.bag'
     
     output_bag = rosbag.Bag(output_bagname, 'w')

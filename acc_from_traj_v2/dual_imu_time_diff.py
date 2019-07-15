@@ -19,6 +19,26 @@ def GyroRotationEstimation(gyro_seq1, gyro_seq2):
     p = Problem(gyro_seq1, gyro_seq2)
     return gauss_newton(p, [0.1,0,0, 0,0,0], step=20)
 
+def rewrite_bag_with_dt(bag_filename, namespace_prefix_to_move, dt_secs):
+    dt_duration = rospy.rostime.Duration(dt_secs)
+    output_bag_filename = bag_filename[:-4] + '_aligned.bag'
+    output_bag = rosbag.Bag(output_bag_filename, 'w')
+    input_bag = rosbag.Bag(bag_filename)
+    count = 0
+    target_namespace = namespace_prefix_to_move.split('/')[1]
+    for topic, msg, t in input_bag.read_messages():
+        if (topic.split('/')[1] == target_namespace):
+            msg.header.stamp = msg.header.stamp + dt_duration
+            output_bag.write(topic, msg, t + dt_duration)
+        else:
+            msg.header.stamp = msg.header.stamp
+            output_bag.write(topic, msg, t)
+        count += 1
+        if count % 2000 == 0:
+            print('{}/{} msgs'.format(count, input_bag.get_message_count()))
+    input_bag.close()
+    output_bag.close()
+
 def CorrespondenceData(signal1, signal2):
     start1 = 0
     start2 = 0
@@ -40,7 +60,6 @@ def CorrespondenceData(signal1, signal2):
     end2 = None if (end2 == -1) else (end2 + 1)
 
     print("{}#{}####{}#{}".format(start1, start2, end1, end2))
-    # print("{}#{}####{}#{}".format(signal1.t[start1], signal2.t[start2], signal1.t[end1], signal2.t[end2]))
     
     return (signal1.xyz[:,start1:end1], signal2.xyz[:, start2:end2])
 
@@ -52,7 +71,10 @@ if __name__ == '__main__':
 
     bag_filename = argv[1]
     
-    imu_topic_names = ['/p20/imu0', '/s9/imu0']
+    imu_topic_basename = '/imu0'
+    model_spacenames = ['/huawei_p20', '/samsung_s9']
+    imu_topic_names = [ns + imu_topic_basename for ns in model_spacenames]
+    # imu_topic_names = ['/huawei_p20/imu0', '/samsung_s9/imu0']
     raw_imus_angle_rate = []
     for imu_topic in imu_topic_names:
         raw_imus_angle_rate.append(
@@ -119,4 +141,4 @@ if __name__ == '__main__':
     
     plotter.show()
 
-    
+    rewrite_bag_with_dt(bag_filename, model_spacenames[1], dt)
