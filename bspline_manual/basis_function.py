@@ -54,8 +54,11 @@ class bspline(object):
             sum_y += y
         return (t, sum_y)
 
-    def basis_i(self, i, x):
-        return (basis(self.degree, self.knot_vector, i, x))*self.control_points[i]
+    def basis(self, i, x):
+        return (basis(self.degree, self.knot_vector, i, x))
+
+    def weighted_basis(self, i, x):
+        return (self.basis(i, x))*self.control_points[i]
 
 
 if __name__ == "__main__":
