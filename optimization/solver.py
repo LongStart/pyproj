@@ -15,11 +15,12 @@ def GaussNewton(problem, guess, step=20):
         j = problem.jac(x)
         b = -j.transpose().dot(problem.residual(x))
         H = j.transpose().dot(j)
-        print(H)
+        # print(H)
         update = np.linalg.solve(H, b)
         print('x: {}, ud: {}, dcost_dx:{}, cost: {}'.format(x, update, problem.d_cost_dx(x), problem.cost(x)))
 
-        (rotvec, bias_sum) = Problem.parse_space_vector(update)
-        x[0:3] = (R.from_rotvec(rotvec) * R.from_rotvec(x[0:3])).as_rotvec()
-        x[3:6] += bias_sum
+        x = problem.update(x, update)
+        # (rotvec, bias_sum) = Problem.parse_space_vector(update)
+        # x[0:3] = (R.from_rotvec(rotvec) * R.from_rotvec(x[0:3])).as_rotvec()
+        # x[3:6] += bias_sum
     return x

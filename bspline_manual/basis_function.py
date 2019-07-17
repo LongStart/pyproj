@@ -46,7 +46,7 @@ class bspline(object):
             sum_y += y
         return sum_y
 
-    def curve(resolution=50):
+    def curve(self, resolution=50):
         t = np.linspace(self.knot_vector[self.degree], self.knot_vector[-1-self.degree], resolution)
         sum_y = np.zeros(len(t))
         for i in range(len(self.control_points)):
