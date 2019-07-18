@@ -37,6 +37,8 @@ class bspline(object):
         self.degree = degree
         self.knot_vector = check_knot_vector(knot_vector)
         self.control_points = control_points
+        self.min_x = self.knot_vector[self.degree]
+        self.max_x = self.knot_vector[-1-self.degree]
         
 
     def __call__(self, x):
@@ -44,6 +46,14 @@ class bspline(object):
         for i in range(len(self.control_points)):
             y = (basis(self.degree, self.knot_vector, i, x))*self.control_points[i]
             sum_y += y
+        return sum_y
+
+    def cum_f(self, x):
+        raise ValueError
+        d_knot = self.control_points[1:] - self.control_points[:-1]
+        sum_y = self.control_points[0] * self.cum_basis(0, x)
+        for i in range(len(self.control_points) - 1):
+            sum_y += d_knot[i] * self.cum_basis(i + 1, x)
         return sum_y
 
     def curve(self, resolution=50):
@@ -59,6 +69,37 @@ class bspline(object):
 
     def weighted_basis(self, i, x):
         return (self.basis(i, x))*self.control_points[i]
+
+    def cum_basis(self, i, x):
+        raise ValueError
+        import bisect
+        bound_1 = bisect.bisect_left(x, self.knot_vector[i])
+        bound_2 = bisect.bisect_right(x, self.knot_vector[i + self.degree])
+        cum_basis = np.sum([basis(self.degree, self.knot_vector, j, x[bound_1: bound_2]) for j in range(i, i + self.degree)], axis=0)
+        cum = np.hstack([[0.] * bound_1, cum_basis, [1.]*(len(x) - bound_2)])
+        print('cum len: {}, x len: {}'.format(len(cum), len(x)))
+        return cum
+
+
+def deg_viz(deg):
+    knot_vector = np.array([0.,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
+    control_points = np.array([1.]*(len(knot_vector) - deg - 1))
+    bsp = bspline(deg, knot_vector, control_points)
+
+    t = np.linspace(bsp.min_x, bsp.max_x, 50)
+    for i in range(len(control_points)):
+        plt.plot(t, bsp.basis(i, t))
+        # plt.plot(t, bsp.cum_basis(i, t))
+    # plt.show()
+
+if __name__ == "__main1__":
+    # deg_viz(0)
+    # deg_viz(1)
+    # deg_viz(2)
+    deg_viz(3)
+    # deg_viz(4)
+    # deg_viz(5)
+    plt.show()
 
 
 if __name__ == "__main__":
