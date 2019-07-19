@@ -25,7 +25,7 @@ class BSplineSO3(object):
         cum_rot = R.from_quat([[0,0,0,1]]*len(t))
         for i in range(len(self.control_points) - 1, -1, -1):
             cum_basis += self.basis(i, t)
-            cum_rot = R.from_rotvec([b * delta_ctrl_points_so3[i] for b in cum_basis]) * cum_rot
+            cum_rot = R.from_rotvec([w * delta_ctrl_points_so3[i] for w in cum_basis]) * cum_rot
         return cum_rot.as_quat()
 
     def __call__(self, t):
@@ -33,7 +33,7 @@ class BSplineSO3(object):
         cum_prod_y = R.from_quat([[0,0,0,1]]*len(t))
         for i in range(len(self.control_points)):
             y = [w * R.from_quat(self.control_points[i]).as_rotvec() for w in basis(self.degree, self.knot_vector, i, t)] 
-            cum_prod_y *= R.from_rotvec(y)
+            cum_prod_y = cum_prod_y * R.from_rotvec(y)
         return cum_prod_y.as_quat()
 
 if __name__ == "__main__":
@@ -52,7 +52,8 @@ if __name__ == "__main__":
     bsp = BSplineSO3(deg, knot_vector, control_points)
 
     sample_t = np.linspace(knot_vector[deg], knot_vector[-1-deg], 100)
-    curve = bsp.cum_f(sample_t)
+    # curve = bsp.cum_f(sample_t)
+    curve = bsp(sample_t)
     curve_t_xyzw = np.vstack([sample_t, curve.transpose()])
     
     # print(t_xyzw)
