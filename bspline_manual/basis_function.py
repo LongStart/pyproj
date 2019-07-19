@@ -49,11 +49,12 @@ class bspline(object):
         return sum_y
 
     def cum_f(self, x):
-        raise ValueError
-        d_knot = self.control_points[1:] - self.control_points[:-1]
-        sum_y = self.control_points[0] * self.cum_basis(0, x)
-        for i in range(len(self.control_points) - 1):
-            sum_y += d_knot[i] * self.cum_basis(i + 1, x)
+        cum_basis = np.zeros(len(x))
+        delta_ctrl_points = np.hstack([self.control_points[0], self.control_points[1:] - self.control_points[:-1]])
+        sum_y = np.zeros(len(x))
+        for i in range(len(self.control_points) - 1, -1, -1):
+            cum_basis += self.basis(i, x)
+            sum_y += cum_basis * delta_ctrl_points[i]
         return sum_y
 
     def curve(self, resolution=50):
@@ -69,16 +70,6 @@ class bspline(object):
 
     def weighted_basis(self, i, x):
         return (self.basis(i, x))*self.control_points[i]
-
-    def cum_basis(self, i, x):
-        raise ValueError
-        import bisect
-        bound_1 = bisect.bisect_left(x, self.knot_vector[i])
-        bound_2 = bisect.bisect_right(x, self.knot_vector[i + self.degree])
-        cum_basis = np.sum([basis(self.degree, self.knot_vector, j, x[bound_1: bound_2]) for j in range(i, i + self.degree)], axis=0)
-        cum = np.hstack([[0.] * bound_1, cum_basis, [1.]*(len(x) - bound_2)])
-        print('cum len: {}, x len: {}'.format(len(cum), len(x)))
-        return cum
 
 
 def deg_viz(deg):
@@ -123,8 +114,8 @@ if __name__ == "__main__":
     sci_ys = interpolate.BSpline(knot_vector, control_points_y, degree, extrapolate=False)(t)
     # print(t)
     
-    xs = bx(t)
-    ys = by(t)
+    xs = bx.cum_f(t)
+    ys = by.cum_f(t)
     # plt.figure()
     # plt.grid(1)
     # plt.plot(t, xs)
