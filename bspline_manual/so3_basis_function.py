@@ -29,12 +29,18 @@ class BSplineSO3(object):
         return cum_rot.as_quat()
 
     def __call__(self, t):
-        # sum_y = np.zeros(len(t))
-        cum_prod_y = R.from_quat([[0,0,0,1]]*len(t))
-        for i in range(len(self.control_points)):
-            y = [w * R.from_quat(self.control_points[i]).as_rotvec() for w in basis(self.degree, self.knot_vector, i, t)] 
-            cum_prod_y = cum_prod_y * R.from_rotvec(y)
-        return cum_prod_y.as_quat()
+        return self.cum_f(t)
+
+    def curve(self, resolution=50):
+        t = np.linspace(self.knot_vector[self.degree], self.knot_vector[-1-self.degree], resolution)
+        y = self.__call__(t)
+        return np.vstack([t, y.transpose()])
+    # def __call__(self, t):
+    #     cum_prod_y = R.from_quat([[0,0,0,1]]*len(t))
+    #     for i in range(len(self.control_points)):
+    #         y = [w * R.from_quat(self.control_points[i]).as_rotvec() for w in basis(self.degree, self.knot_vector, i, t)] 
+    #         cum_prod_y = cum_prod_y * R.from_rotvec(y)
+    #     return cum_prod_y.as_quat()
 
 if __name__ == "__main__":
     print('6666666')

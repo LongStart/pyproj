@@ -11,8 +11,10 @@ if __name__ == "__main__":
     t = 0.5
 
     interp_r_a = R.from_rotvec(r[0].as_rotvec() * (1 - t)) * R.from_rotvec(r[1].as_rotvec() * t)
+    interp_r_aa = r[0] * R.from_rotvec(r[0].as_rotvec() * -t) * R.from_rotvec(r[1].as_rotvec() * t)
     interp_r_b = r[0] * R.from_rotvec(t * (r[0].inv() * r[1]).as_rotvec())
 
     print(interp_r_a.as_rotvec())
+    print(interp_r_aa.as_rotvec())
     print(interp_r_b.as_rotvec())
     
