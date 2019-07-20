@@ -12,6 +12,39 @@ import PlotCollection
 from add_3axis_figure import *
 from dsp import *
 import scipy.interpolate as interpolate
+from core.assignable_space_signal import Trajectory3d
+from core.assignable_space_signal import Signal3d
+from bspline_fitting import BsplineFittingProblem
+from bspline_utils import CreateUniformKnotVector
+
+def scipy_spl(raw_gt_pose):
+    spl_param_x = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[1], s = 0.01, k=4)
+    spl_param_y = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[2], s = 0.01, k=4)
+    spl_param_z = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[3], s = 0.01, k=4)
+    spl_x = interpolate.BSpline(*spl_param_x, extrapolate=False)
+    spl_y = interpolate.BSpline(*spl_param_y, extrapolate=False)
+    spl_z = interpolate.BSpline(*spl_param_z, extrapolate=False)
+    spl_txyz = np.vstack((raw_gt_pose[0], spl_x(raw_gt_pose[0]), spl_y(raw_gt_pose[0]), spl_z(raw_gt_pose[0])))
+
+    spl_v_txyz = np.vstack((raw_gt_pose[0], spl_x.derivative()(raw_gt_pose[0]), spl_y.derivative()(raw_gt_pose[0]), spl_z.derivative()(raw_gt_pose[0])))
+    spl_a_txyz = np.vstack((raw_gt_pose[0], spl_x.derivative().derivative()(raw_gt_pose[0]), spl_y.derivative().derivative()(raw_gt_pose[0]), spl_z.derivative().derivative()(raw_gt_pose[0])))
+    return spl_txyz, spl_v_txyz, spl_a_txyz
+
+def manual_spl(traj):
+    degree = 3
+    knot_vec = CreateUniformKnotVector(degree, traj.t[0], traj.t[-1], 30)
+    # new_traj = Trajectory3d.from_t_xyz_xyzw(traj.t)
+    new_xyz = [0.]*3
+    resample_t = np.linspace(traj.t[0], traj.t[-1], 500)
+    for i in range(3):
+        problem = BsplineFittingProblem(degree, knot_vec, traj.t, traj.xyz[i])
+        result = problem.solve(problem.bsp.control_points, step=5, verbose=1)
+        problem.bsp.control_points = result
+        new_xyz[i] = problem.bsp(resample_t)
+        # print(problem.bsp(new_traj.t))
+    new_traj = Trajectory3d.from_t_xyz_xyzw(resample_t, new_xyz)
+    return new_traj
+    
 
 if __name__ == '__main__':
     if(len(argv) < 3):
@@ -42,39 +75,27 @@ if __name__ == '__main__':
 
     raw_gt_pose = PoseFromTransformStamped(transform_msgs)
     CorrectBiasedStamp(raw_gt_pose[0])
+    raw_gt_pose = Trajectory3d(raw_gt_pose[:, 1460:1500])
 
-    # t_0 = raw_gt_pose[0].mean()
-    # t = [t_0 - 1, t_0, t_0 + 1]
-    # k = 3
-    # t = np.r_[(raw_gt_pose[0,0],)*(k+1),
-    #       t,
-    #       (raw_gt_pose[0,-1],)*(k+1)]
-    # print(t)
+    vel_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, raw_gt_pose.xyz))
+    acc_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, vel_vicon.xyz))
 
-    spl_param_x = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[1], s = 0.01, k=4)
-    spl_param_y = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[2], s = 0.01, k=4)
-    spl_param_z = interpolate.splrep(raw_gt_pose[0], raw_gt_pose[3], s = 0.01, k=4)
-    spl_x = interpolate.BSpline(*spl_param_x, extrapolate=False)
-    spl_y = interpolate.BSpline(*spl_param_y, extrapolate=False)
-    spl_z = interpolate.BSpline(*spl_param_z, extrapolate=False)
-    spl_txyz = np.vstack((raw_gt_pose[0], spl_x(raw_gt_pose[0]), spl_y(raw_gt_pose[0]), spl_z(raw_gt_pose[0])))
+    spl_txyz, spl_v_txyz, spl_a_txyz = scipy_spl(raw_gt_pose.t_xyz_xyzw)
 
-    v_txyz = np.vstack((raw_gt_pose[0], Derivative3d(raw_gt_pose[0], raw_gt_pose[1:4])))
-    a_txyz = np.vstack((raw_gt_pose[0], Derivative3d(raw_gt_pose[0], v_txyz[1:4])))
-    spl_v_txyz = np.vstack((raw_gt_pose[0], spl_x.derivative()(raw_gt_pose[0]), spl_y.derivative()(raw_gt_pose[0]), spl_z.derivative()(raw_gt_pose[0])))
-    spl_a_txyz = np.vstack((raw_gt_pose[0], spl_x.derivative().derivative()(raw_gt_pose[0]), spl_y.derivative().derivative()(raw_gt_pose[0]), spl_z.derivative().derivative()(raw_gt_pose[0])))
+    mspl_traj = manual_spl(raw_gt_pose)
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
 
     vel = {
-        'by_diff': v_txyz,
+        'by_diff': vel_vicon.t_xyz,
         'by_spl': spl_v_txyz}
     pos = {
-        'by_diff': raw_gt_pose[:4],
-        'by_spl': spl_txyz
+        'by_diff': raw_gt_pose.t_xyz,
+        'by_spl': spl_txyz,
+        'by_m_spl': mspl_traj.t_xyz
     }
     acc = {
-        'by_diff': a_txyz,
+        'by_diff': acc_vicon.t_xyz,
         'by_spl': spl_a_txyz
     }
     # gyro = {
@@ -86,8 +107,8 @@ if __name__ == '__main__':
 
     # add_3axis_figure(plotter, "angle_rate", gyro, linewidth=1., fmt='-')
     # add_naxis_figure(plotter, "acc", acc, linewidth=1., fmt='-')
+    add_naxis_figure(plotter, "pos", pos, linewidth=1, fmt='.-')
     add_naxis_figure(plotter, "vel", vel, linewidth=1, fmt='-')
-    add_naxis_figure(plotter, "pos", pos, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=1, fmt='-')
     
     plotter.show()

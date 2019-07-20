@@ -4,9 +4,11 @@ import numpy as np
 from so3_basis_function import *
 import copy
 from solver import GaussNewton
+from solver import Problem
 from scipy.optimize import least_squares
+from bspline_utils import CreateUniformKnotVector
 
-class SO3BsplineFittingProblem():
+class SO3BsplineFittingProblem(Problem):
     def __init__(self, bsp, ts, ys):
         self.bsp = copy.deepcopy(bsp)
         self.ts = ts[1:-1]
@@ -29,10 +31,8 @@ class SO3BsplineFittingProblem():
     def num_jac(self, x):
         eps = 1e-5
         d_res_d_x = []
-        # bsp_input = R.from_rotvec(x.reshape(len(x)/3, 3)).as_quat()
-        rot_vecs = x.reshape(len(x)/3, 3)
-        # print(rot_vecs)
-        for rot_idx in range(len(x)/3):
+        rot_vecs = x.reshape(-1, 3)
+        for rot_idx in range(len(rot_vecs)):
             for ax_idx in range(3):
                 rot_vecs_inc = copy.deepcopy(rot_vecs)
                 disturb = np.zeros(3)
@@ -40,35 +40,15 @@ class SO3BsplineFittingProblem():
                 rot_vecs_inc[rot_idx] =  (R.from_rotvec(disturb) * R.from_rotvec(rot_vecs_inc[rot_idx])).as_rotvec()
                 d_res_d_x.append((self.residual(rot_vecs_inc.ravel()) - self.residual(x))/eps)
         return np.vstack(d_res_d_x).transpose()
-                
-
-        # for i in range(len(x)):
-        #     x_inc = np.array(x)
-        #     x_inc[i] += eps
-        #     print('{}#{}'.format(self.local_bsp(x_inc)(self.ts), self.local_bsp(x)(self.ts)))
-        #     d_res_d_x.append((self.residual(x_inc) - self.residual(x))/eps)
-        # return np.vstack(d_res_d_x).transpose()
 
     def jac(self, x):
-        # return np.vstack([self.local_bsp(x).basis(i, self.ts) for i in range(len(x))]).transpose()
         return self.num_jac(x)
-    
-    def d_cost_dx(self, x):
-        return self.jac(x).transpose().dot(self.residual(x)) + self.residual(x).transpose().dot(self.jac(x))
-
-    def cost(self, x):
-        return self.residual(x).transpose().dot(self.residual(x))
 
     @staticmethod
     def update(x, update):
-        rot_x = R.from_rotvec(x.reshape(len(x)/3, 3))
-        rot_update = R.from_rotvec(update.reshape(len(x)/3, 3))
+        rot_x = R.from_rotvec(x.reshape(-1, 3))
+        rot_update = R.from_rotvec(update.reshape(-1, 3))
         return (rot_update * rot_x).as_rotvec().ravel()
-
-def CreateKnotVector1(degree, time_stamps):
-    front_len = (degree + 1) / 2
-    back_len = front_len if degree % 2 == 1 else (front_len + 1)
-    return np.hstack([[time_stamps[0]]* front_len, time_stamps, [time_stamps[-1]]* back_len])
 
 
 if __name__ == "__main__":
@@ -80,7 +60,8 @@ if __name__ == "__main__":
     sample_num = 20
     sample_data_t = np.array(range(sample_num))
     sample_data_p = R.from_rotvec([[0,0,.1 * i] for i in range(sample_num)]).as_quat()
-    knot_vec = CreateKnotVector1(3, [1.,2,3,5,7,9, 13, 15, 17, 18, 19])
+    # knot_vec = CreateKnotVector1(3, [1.,2,3,5,7,9, 13, 15, 17, 18, 19])
+    knot_vec = CreateUniformKnotVector(3, 1, 19, 10)
     print(knot_vec)
     bsp = BSplineSO3(3, knot_vec, [1.]*(len(knot_vec) - 4))
     problem = SO3BsplineFittingProblem(bsp, sample_data_t, sample_data_p)
@@ -92,19 +73,21 @@ if __name__ == "__main__":
     print('jac')
     print(problem.jac(guess))
     # quit()
-    result = GaussNewton(problem, guess, step = 5)
+    # result = GaussNewton(problem, guess, step = 5)
+    result = problem.solve(guess, step = 5)
     # res = least_squares(problem.residual, guess, jac=problem.jac, method='lm',verbose=2)
     # result = res.x
     print(result)
+    problem.bsp.control_points = R.from_rotvec(result.reshape(-1,3)).as_quat()
 
     
-    spline_fit = BSplineSO3(3, knot_vec, R.from_rotvec(result.reshape(len(result)/3, 3)).as_quat())
-    spline_fit.curve(100)
+    # spline_fit = BSplineSO3(3, knot_vec, R.from_rotvec(result.reshape(len(result)/3, 3)).as_quat())
+    # spline_fit.curve(100)
 
     quat = {
         'q_raw': np.vstack([sample_data_t, sample_data_p.transpose()]),
         # 'q_sci': scipy_t_xyzw,
-        'q_bsp': spline_fit.curve(100)}
+        'q_bsp': problem.bsp.curve(100)}
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    add_naxis_figure(plotter, "orientation", quat, markersize=5, fmt='o-')
+    add_naxis_figure(plotter, "orientation", quat, markersize=5, fmt='-')
     plotter.show()
