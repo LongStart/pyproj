@@ -89,5 +89,5 @@ if __name__ == "__main__":
         # 'q_sci': scipy_t_xyzw,
         'q_bsp': problem.bsp.curve(100)}
     plotter = PlotCollection.PlotCollection("Multiple Wave")
-    add_naxis_figure(plotter, "orientation", quat, markersize=5, fmt='-')
+    add_naxis_figure(plotter, "orientation", quat, markersize=5, fmt='.-')
     plotter.show()

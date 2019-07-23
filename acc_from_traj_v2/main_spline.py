@@ -10,7 +10,7 @@ from inertia_from_traj import *
 # from signal import Trajectory3d
 import PlotCollection
 from add_3axis_figure import *
-from dsp import *
+from core.dsp import *
 import scipy.interpolate as interpolate
 from core.assignable_space_signal import Trajectory3d
 from core.assignable_space_signal import Signal3d
@@ -31,18 +31,18 @@ def scipy_spl(raw_gt_pose):
     return spl_txyz, spl_v_txyz, spl_a_txyz
 
 def manual_spl(traj):
-    degree = 3
-    knot_vec = CreateUniformKnotVector(degree, traj.t[0], traj.t[-1], 30)
+    degree = 6
+    knot_vec = CreateUniformKnotVector(degree, traj.t[0], traj.t[-1], 200)
     # new_traj = Trajectory3d.from_t_xyz_xyzw(traj.t)
     new_xyz = [0.]*3
-    resample_t = np.linspace(traj.t[0], traj.t[-1], 500)
+    # resample_t = np.linspace(traj.t[6], traj.t[-6], 500)
     for i in range(3):
         problem = BsplineFittingProblem(degree, knot_vec, traj.t, traj.xyz[i])
-        result = problem.solve(problem.bsp.control_points, step=5, verbose=1)
+        result = problem.solve(problem.bsp.control_points, step=2, verbose=1)
         problem.bsp.control_points = result
-        new_xyz[i] = problem.bsp(resample_t)
+        new_xyz[i] = problem.bsp(traj.t)
         # print(problem.bsp(new_traj.t))
-    new_traj = Trajectory3d.from_t_xyz_xyzw(resample_t, new_xyz)
+    new_traj = Trajectory3d.from_t_xyz_xyzw(traj.t, new_xyz)
     return new_traj
     
 
@@ -75,7 +75,8 @@ if __name__ == '__main__':
 
     raw_gt_pose = PoseFromTransformStamped(transform_msgs)
     CorrectBiasedStamp(raw_gt_pose[0])
-    raw_gt_pose = Trajectory3d(raw_gt_pose[:, 1460:1500])
+    raw_gt_pose = Trajectory3d(raw_gt_pose[:, 1000:2000])
+    raw_gt_pose.t = raw_gt_pose.t - raw_gt_pose.t[0]
 
     vel_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, raw_gt_pose.xyz))
     acc_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, vel_vicon.xyz))
@@ -107,7 +108,7 @@ if __name__ == '__main__':
 
     # add_3axis_figure(plotter, "angle_rate", gyro, linewidth=1., fmt='-')
     # add_naxis_figure(plotter, "acc", acc, linewidth=1., fmt='-')
-    add_naxis_figure(plotter, "pos", pos, linewidth=1, fmt='.-')
+    add_naxis_figure(plotter, "pos", pos, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "vel", vel, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=1, fmt='-')
     

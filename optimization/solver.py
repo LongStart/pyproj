@@ -8,8 +8,10 @@ def GaussNewton(problem, guess, step=20, verbose=0):
         H = j.transpose().dot(j)
         # print(H)
         update = np.linalg.solve(H, b)
-        if verbose > 0:
+        if verbose > 1:
             print('x: {}, ud: {}, dcost_dx:{}, cost: {}'.format(x, update, problem.d_cost_dx(x), problem.cost(x)))
+        elif verbose > 0:
+            print("it: {}".format(i))
 
         x = problem.update(x, update)
     return x
