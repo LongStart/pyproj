@@ -1,0 +1,124 @@
+<head>
+    <script type="text/javascript" async 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    <script src="../run_prettify.js"></script>
+    <style>
+        li.L0,
+        li.L1,
+        li.L2,
+        li.L3,
+        li.L5,
+        li.L6,
+        li.L7,
+        li.L8 {
+            list-style-type: decimal !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>IMU from Ground Truth</h1>
+    <h2>References</h2>
+    <a href="https://stackoverflow.com/questions/45179024/scipy-bspline-fitting-in-python">bspline interpolation python</a>
+    <a href="https://www.youtube.com/watch?v=r6UcF0S0HvQ">introduction of b-spline on youtube </a>
+    <h2>Notation</h2>
+    <p>Frame:  </p>
+    <ul>
+        <li>Inertial: {I}</li>
+        <li>Body: {B}</li>
+        <li>IMU: {M}</li>
+    </ul>
+    
+    <h2>Params</h2>
+    <table>
+        <tr>
+            <th>IO</th>
+            <th>time property</th>
+            <th>description</th>
+            <th>expression</th>
+            <th>other expression</th>
+        </tr>
+        <tr>
+            <td>in</td>
+            <td>time variant</td>
+            <td>orientation of body frame</td>
+            <td>\(R_{IB}(t)\)</td>
+        </tr>
+        <tr>
+            <td>in</td>
+            <td>time variant</td>
+            <td>position of body frame</td>
+            <td>\(T_{IB}(t)\)</td>
+        </tr>
+        <tr>
+            <td>in</td>
+            <td>time invariant</td>
+            <td>rotation from IMU to body frame</td>
+            <td>\(R_{BM}\)</td>
+        </tr>
+        <tr>
+            <td>in</td>
+            <td>time invariant</td>
+            <td>translation from IMU to body frame</td>
+            <td>\(T_{BM}\)</td>
+        </tr>
+        <tr>
+            <td>out1</td>
+            <td>time variant</td>
+            <td>angle velocity measured under IMU frame</td>
+            <td>\(\omega_{IM}^{M}\)</td>
+            <td>
+                \( = \omega_{IB}^{M} = R_{MB} \omega_{IB}^{B}\)
+            </td>
+        </tr>
+        <tr>
+            <td>out2</td>
+            <td>time variant</td>
+            <td>acceleration measured under IMU frame</td>
+            <td>\(\ddot{T}_{IM}^{M}\)</td>
+        </tr>
+    </table>
+
+
+    <h3>Derivative of Rotation Matrix</h3>
+    \[
+        \dot R_{AB} = R_{AB} (\omega_{AB}^A)^ \wedge
+    \]
+
+    \[
+        \ddot R_{AB} = R_{AB} \omega^ \wedge  \omega^ \wedge + (R_{AB} \dot \omega)^ \wedge R_{AB}
+    \]
+    <h3>Derivative of trajectory orientation</h3>
+    \[
+        ln(R_{IB,k+1}R_{IB,k}^T )^\vee = \Delta \boldsymbol{\varphi}_{IB}^I
+    \]
+    \[
+        \frac{ln(R_{k+1}R_k^T )^\vee}{\Delta t} = \omega_{IB}^I
+    \]
+    <p>Then we get <b>out1</b>:</p>
+    \[
+        \omega_{IM}^{M} = \omega_{IB}^{M} = R_{MB} R_{BI} \omega_{IB}^{I}
+    \]
+
+    <h3>Acceleration</h3>
+    \[
+        T_{IM}^I = R_{IB} T_{BM} + T_{IB}
+    \]
+    <p>Time derivative:</p>
+    \[
+        \dot T_{IM}^I = \dot R_{IB} T_{BM} + \dot T_{IB}
+    \]
+
+    \[
+        \ddot T_{IM}^I = \ddot R_{IB} T_{BM} + \ddot T_{IB}
+    \]
+
+    \[
+        \ddot T_{IM}^I = (R_{IB}\omega_{IB}^{I\wedge} \omega_{IB}^{I\wedge} + R_{IB}\dot\omega_{IB}^{I\wedge}) T_{BM} + \ddot T_{IB}
+    \]
+
+    \[
+        \ddot T_{IM}^M = R_{MB} R_{BI} \ddot T_{IM}^I + R_{MB} R_{BI}\boldsymbol{g}
+    \]
+
+</body>

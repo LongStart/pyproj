@@ -31,7 +31,7 @@ def scipy_spl(raw_gt_pose):
     return spl_txyz, spl_v_txyz, spl_a_txyz
 
 def manual_spl(traj):
-    degree = 6
+    degree = 3
     knot_vec = CreateUniformKnotVector(degree, traj.t[0], traj.t[-1], 200)
     # new_traj = Trajectory3d.from_t_xyz_xyzw(traj.t)
     new_xyz = [0.]*3
@@ -44,7 +44,27 @@ def manual_spl(traj):
         # print(problem.bsp(new_traj.t))
     new_traj = Trajectory3d.from_t_xyz_xyzw(traj.t, new_xyz)
     return new_traj
-    
+
+def aslam_spl(traj):
+    import bsplines
+    lamb = 0.00001
+    maxTime = 5000
+    resample_t = np.linspace(traj.t[6], traj.t[-6], 20000)
+
+    s = bsplines.EuclideanBSpline(4, 3)
+    s.initUniformSpline(traj.t, traj.xyz, maxTime, lamb)
+    new_xyz = np.array([s.eval(t) for t in resample_t]).transpose()
+
+    v_xyz = np.array([s.evalD(t, 1) for t in resample_t]).transpose()
+
+    s = bsplines.UnitQuaternionBSpline(4)
+    s.initUniformSpline(traj.t, traj.xyzw, maxTime, lamb)
+    new_xyzw = np.array([s.eval(t) for t in resample_t]).transpose()
+    dq_dt = np.array([s.evalD(t,1) for t in resample_t]).transpose()
+
+    new_traj = Trajectory3d.from_t_xyz_xyzw(resample_t, xyz=new_xyz, xyzw=new_xyzw)
+    vel = Trajectory3d.from_t_xyz_xyzw(resample_t, xyz=v_xyz, xyzw=dq_dt)
+    return new_traj, vel
 
 if __name__ == '__main__':
     if(len(argv) < 3):
@@ -75,29 +95,38 @@ if __name__ == '__main__':
 
     raw_gt_pose = PoseFromTransformStamped(transform_msgs)
     CorrectBiasedStamp(raw_gt_pose[0])
-    raw_gt_pose = Trajectory3d(raw_gt_pose[:, 1000:2000])
+    # raw_gt_pose = Trajectory3d(raw_gt_pose[:, 1000:2000])
+    raw_gt_pose = Trajectory3d(raw_gt_pose)
+    raw_gt_pose.xyzw = ContiguousQuaternion(raw_gt_pose.xyzw)
     raw_gt_pose.t = raw_gt_pose.t - raw_gt_pose.t[0]
 
     vel_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, raw_gt_pose.xyz))
     acc_vicon = Signal3d.from_t_xyz(raw_gt_pose.t, Derivative3d(raw_gt_pose.t, vel_vicon.xyz))
 
     spl_txyz, spl_v_txyz, spl_a_txyz = scipy_spl(raw_gt_pose.t_xyz_xyzw)
-
-    mspl_traj = manual_spl(raw_gt_pose)
+    # mspl_traj = manual_spl(raw_gt_pose)
+    aspl_traj, aspl_vel = aslam_spl(raw_gt_pose)
 
     plotter = PlotCollection.PlotCollection("Multiple Wave")
 
     vel = {
         'by_diff': vel_vicon.t_xyz,
-        'by_spl': spl_v_txyz}
+        'by_spl': spl_v_txyz,
+        'by_aspl': aspl_vel.t_xyz}
     pos = {
         'by_diff': raw_gt_pose.t_xyz,
         'by_spl': spl_txyz,
-        'by_m_spl': mspl_traj.t_xyz
+        'by_aspl': aspl_traj.t_xyz
     }
     acc = {
         'by_diff': acc_vicon.t_xyz,
         'by_spl': spl_a_txyz
+    }
+
+    quat = {
+        'vicon': raw_gt_pose.t_xyzw,
+        'by_aspl': aspl_traj.t_xyzw,
+        'by_aspl_v': aspl_vel.t_xyzw,
     }
     # gyro = {
     #     'from_traj': imu_angle_rate,
@@ -111,5 +140,6 @@ if __name__ == '__main__':
     add_naxis_figure(plotter, "pos", pos, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "vel", vel, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=1, fmt='-')
+    add_naxis_figure(plotter, "ori", quat, linewidth=1, fmt='-')
     
     plotter.show()

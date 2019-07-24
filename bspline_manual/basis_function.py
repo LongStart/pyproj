@@ -42,6 +42,7 @@ class bspline(object):
         
 
     def __call__(self, x):
+        return self.cum_f(x)
         sum_y = np.zeros(len(x))
         for i in range(len(self.control_points)):
             y = (basis(self.degree, self.knot_vector, i, x))*self.control_points[i]
