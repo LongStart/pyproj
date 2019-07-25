@@ -136,9 +136,9 @@ if __name__ == '__main__':
     plotter = PlotCollection.PlotCollection("Multiple Wave")
     add_naxis_figure(plotter, "angle rate", angle_rate, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "mag angle rate", mag_angle_rate, linewidth=0.8, fmt='-')
-    add_naxis_figure(plotter, "correlation", correlation, linewidth=0.8, fmt='.-')
+    add_naxis_figure(plotter, "correlation", correlation, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "angle_rate_y", angle_rate_y, markersize=35, fmt='_')
     
     plotter.show()
 
-    rewrite_bag_with_dt(bag_filename, model_spacenames[1], dt)
+    # rewrite_bag_with_dt(bag_filename, model_spacenames[1], dt)
