@@ -1,0 +1,22 @@
+resolution: [{{cam.width}}, {{cam.height}}]
+intrinsics: [{{cam.fx}}, {{cam.fy}}, {{cam.cx}}, {{cam.cy}}]
+distortion_coeffs: [{{cam.k1}}, {{cam.k2}}, {{cam.p1}}, {{cam.p2}}, {{cam.k3}}]
+shutter_time: {{cam.rolling_shutter_time}}
+T_cam_imu: 
+- [{% for coeff in cam_imu_ex.transform_imu_to_cam[0] %}{{coeff}}{{ ", " if not loop.last }}{% endfor %}]
+- [{% for coeff in cam_imu_ex.transform_imu_to_cam[1] %}{{coeff}}{{ ", " if not loop.last }}{% endfor %}]
+- [{% for coeff in cam_imu_ex.transform_imu_to_cam[2] %}{{coeff}}{{ ", " if not loop.last }}{% endfor %}]
+- [{% for coeff in cam_imu_ex.transform_imu_to_cam[3] %}{{coeff}}{{ ", " if not loop.last }}{% endfor %}]
+timedifference_cam_imu: {{cam_imu_ex.td_imu_to_cam}}
+gyro_crossterms: 
+- [1, 0, 0]
+- [0, 1, 0]
+- [0, 0, 1]
+accelerometer_crossterms: 
+- [ 1, 0, 0]
+- [ 0, 1, 0]
+- [ 0, 0, 1]
+gyro_noise_density: {{imu.gyr_n}}
+gyro_random_walk: {{imu.gyr_w}}
+accelerometer_noise_density: {{imu.acc_n}}
+accelerometer_random_walk: {{imu.acc_w}}
