@@ -70,8 +70,8 @@ if __name__ == '__main__':
         'from_imu': raw_imu_acc.t_xyz}
     # print(gyro.keys()[0])
     # print(acc.keys()[0])
-    add_naxis_figure(plotter, "angle_rate", gyro, linewidth=0.4, fmt='-')
+    add_naxis_figure(plotter, "angle_rate", gyro, linewidth=0.8, fmt='-')
     add_naxis_figure(plotter, "quat", quat, fmt='-')
-    add_naxis_figure(plotter, "acc", acc, linewidth=0.3, fmt='-')
+    add_naxis_figure(plotter, "acc", acc, linewidth=0.8, fmt='-')
     
     plotter.show()

@@ -13,8 +13,8 @@ class BTrajectory():
 #     def func(t):
 
 
-def Continualization(t_xyz_xyzw, lamb=1e-5, max_time=50000):
-    order = 4
+def Continualization(t_xyz_xyzw, lamb=1e-5, max_time=3000):
+    order = 5
     pos_spl = bsplines.EuclideanBSpline(order, 3)
     pos_spl.initUniformSpline(t_xyz_xyzw[0], t_xyz_xyzw[1:4], max_time, lamb)
     quat_spl = bsplines.UnitQuaternionBSpline(order)
