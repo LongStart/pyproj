@@ -16,7 +16,7 @@ class MemWord():
 def GetWordOrigin(w):
     from lxml import html
     import requests
-
+    return ''
     page = requests.get('https://www.lexico.com/en/definition/' + w)
     tree = html.fromstring(page.content)
     origin = tree.xpath('//div[@class="senseInnerWrapper"]/p')
