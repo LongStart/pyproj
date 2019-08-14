@@ -1,6 +1,6 @@
 import sys
 from html_to_momo import ExtractWordsFromHtmlVocabulary
-from googletrans import Translator
+#from googletrans import Translator
 
 
 def MemLevel(cls):

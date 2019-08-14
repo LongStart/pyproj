@@ -63,32 +63,40 @@ def LexicoWordOrigin(w):
             synonyms = synonyms.text_content() if synonyms != '' else ''
             word_def_blocks.append(WordDefBlock(meaning, example, synonyms))
         pos_blocks.append(POSBlock(pos, word_def_blocks))
-    return pos_blocks, origin
+
+    derivative_word = GetFirst(tree.xpath('//div[@class="empty_sense"]/p[@class="derivative_of"]/a/text()'))
+    derivative_of = MemWord.OnlineConstruct(derivative_word) if derivative_word != '' else None
+    return pos_blocks, origin, derivative_of
 
     # if len(origin) == 0:
     #     return ''
     # return origin[0].text_content()
 
 class MemWord():
-    def __init__(self, word, mem_level, pos_blocks, origin):
+    def __init__(self, word, mem_level, pos_blocks, origin, dervative_of=None):
         self.word = word
         self.mem_level = mem_level
         self.pos_blocks = pos_blocks
         self.definition_cn = ''
         self.origin = origin
+        self.dervative_of = dervative_of
 
     def __str__(self):
+        if self.dervative_of is not None:
+            result = 'DEFINITION EMPTY: "{}" is the derivative of "{}"\n'.format(self.word, self.dervative_of.word)
+            return result + self.dervative_of.__str__()
+
         result = ""
         for b in self.pos_blocks:
             result += b.__str__()
         result += "="*50 + '\n'
-        result += self.origin
+        result += self.origin + '\n'
         return result
 
     @classmethod
     def OnlineConstruct(cls, word):
-        pos_blocks, origin = LexicoWordOrigin(word)
-        return cls(word, 3.,pos_blocks, origin)
+        pos_blocks, origin, derivative_of = LexicoWordOrigin(word)
+        return cls(word, 3.,pos_blocks, origin, derivative_of)
 
     @staticmethod
     def Vocabulary(words):
