@@ -1,12 +1,11 @@
-from lxml import html
-import requests
+from mem_word import MemWord
 
 if __name__ == "__main__":
-    from lxml import html
-    import requests
-
-    page = requests.get('https://www.lexico.com/en/definition/happy' + w)
-    tree = html.fromstring(page.content)
-    tree.xpath()
-
+    results = MemWord.Vocabulary(['hello', 'ripple'])
+    for w in results:
+        print(w.origin)
+        # print(len(w.pos_blocks))
+        for b in w.pos_blocks:
+            print(b)
+    # print(result.)
 
