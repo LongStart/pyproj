@@ -13,6 +13,7 @@ def UpdateMemWords(mem_words):
 
 if __name__ == "__main__":
     from mem_vocabulary import ConcurrentInitVocabulary
+    from mem_word import TerminalVis
     if len(sys.argv) < 2:
         print("eg.: python {} vocabulary.html".format(sys.argv[0]))
         quit()
@@ -22,12 +23,12 @@ if __name__ == "__main__":
     #mem_words = LoadMemWords(words)
     while True:
         UpdateMemWords(mem_words)
-        input((mem_words[0].word).center(100))
+        input((mem_words[0].vis_word).center(100))
         print(mem_words[0])
         while True:
             try:
-                level = input("mem_level: ")
-                print('\033[H\033[J')
+                level = input(TerminalVis.MemLevel())
+                print(TerminalVis.CLS)
                 print('\n' * 10)
                 mem_words[0].mem_level = float(level)
             except ValueError:

@@ -1,4 +1,5 @@
 import sys
+from colorama import Fore, Back, Style
 
 def LexicoWordOrigin(w):
     from lxml import html
@@ -14,6 +15,23 @@ def LexicoWordOrigin(w):
 def GoogleTransMeaning(translator, w):
     result = translator.translate(w, dest='zh-cn')
 
+class TerminalVis():
+    BOLD = '\033[1m'
+    CLS = '\033[H\033[J'
+    @classmethod
+    def Seperator(cls):
+        return Fore.YELLOW + "="*50 + Style.RESET_ALL + '\n'
+
+    @classmethod
+    def MinorSeperator(cls):
+        return Fore.YELLOW + "-"*10 + Style.RESET_ALL + '\n'
+
+    @classmethod
+    def MemLevel(cls):
+        return Fore.RED + TerminalVis.BOLD + 'mem_level: ' + Style.RESET_ALL
+
+
+
 class WordDefBlock():
     def __init__(self, definition, example, synonyms):
         self.definition = definition
@@ -26,14 +44,15 @@ class POSBlock():
         self.word_defs = word_defs
 
     def __str__(self):
-        output = "="*50 + '\n'
-        output += self.pos.upper() + '\n'
+        from colorama import Fore, Back, Style
+        output = TerminalVis.Seperator()
+        output += Fore.GREEN + TerminalVis.BOLD + self.pos.upper() + Style.RESET_ALL + '\n'
 
         for wd in self.word_defs:
-            wd_buff = "-"*10 + '\n'
-            wd_buff += wd.definition + '\n'
-            wd_buff += wd.example + '\n'
-            wd_buff += wd.synonyms + '\n'
+            wd_buff = TerminalVis.MinorSeperator()
+            wd_buff += Fore.LIGHTCYAN_EX + TerminalVis.BOLD + wd.definition + Style.RESET_ALL + Style.RESET_ALL + '\n'
+            wd_buff += Fore.WHITE + wd.example + Style.RESET_ALL + '\n'
+            wd_buff += Fore.LIGHTBLUE_EX + wd.synonyms + Style.RESET_ALL + '\n'
             output += wd_buff
 
         return output
@@ -80,6 +99,7 @@ class MemWord():
         self.definition_cn = ''
         self.origin = origin
         self.dervative_of = dervative_of
+        self.vis_word = Fore.LIGHTGREEN_EX + TerminalVis.BOLD + word + Style.RESET_ALL
 
     def __str__(self):
         if self.dervative_of is not None:
@@ -89,7 +109,7 @@ class MemWord():
         result = ""
         for b in self.pos_blocks:
             result += b.__str__()
-        result += "="*50 + '\n'
+        result += TerminalVis.Seperator()
         result += self.origin + '\n'
         return result
 
