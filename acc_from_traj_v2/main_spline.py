@@ -72,7 +72,7 @@ if __name__ == '__main__':
         quit()
     dataset_name = argv[1]
     bag_filename = argv[2]
-    
+
     groundtruth_topic_name = ''
     imu_topic_name = ''
     if dataset_name == 'euroc':
@@ -141,5 +141,5 @@ if __name__ == '__main__':
     add_naxis_figure(plotter, "vel", vel, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "acc", acc, linewidth=1, fmt='-')
     add_naxis_figure(plotter, "ori", quat, linewidth=1, fmt='-')
-    
+
     plotter.show()

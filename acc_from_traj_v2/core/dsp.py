@@ -22,12 +22,12 @@ def AngleRate(t, xyzw):
     dx_dt = dr.transpose()[0] / dt
     dy_dt = dr.transpose()[1] / dt
     dz_dt = dr.transpose()[2] / dt
-    
+
     return np.array([dx_dt, dy_dt, dz_dt])
 
 def Interpolate(t_vals, t):
 	f = interpolate.interp1d(t_vals[0], t_vals[1:], assume_sorted=True, bounds_error=False, fill_value=0.)
-        
+
 	return np.vstack((t, f(t)))
 
 def Magnitude(nd_seq):
@@ -52,3 +52,15 @@ def ContiguousQuaternion(xyzw_in):
         if prev_q.dot(this_q) < prev_q.dot(-this_q):
             xyzw_out[:, i] = -this_q
     return xyzw_out
+
+def TimeSyncByCorrelation(ref_t_x, mov_t_x, resample_density=1.0):
+	dt_0 = ref_t_x[0,0] - mov_t_x[0,0]
+	mov_t_x[0] += dt_0
+	resample_t = np.linspace(ref_t_x[0,0], ref_t_x[0,-1], len(ref_t_x[0]) * resample_density)
+	uniform_sampled_ref_t_x = Interpolate(ref_t_x, resample_t)
+	uniform_sampled_mov_t_x = Interpolate(mov_t_x, resample_t)
+
+	corr_t = np.arange(-len(resample_t) + 1, len(resample_t))
+	corr = np.correlate(uniform_sampled_ref_t_x[1], uniform_sampled_mov_t_x[1], mode='full')
+	dt = corr_t[np.argmax(corr)] * (resample_t[1] - resample_t[0])
+	return dt_0 + dt

@@ -11,7 +11,7 @@ class SequenceXd(object):
             return
         assert np.shape(self._data) == np.shape(data)
         self._data = data
-    
+
     def get(self):
         if np.shape(self._data)[0] == 1:
             return np.array(self._data[0])
@@ -72,7 +72,7 @@ class Signal4d(SignalXd):
     def __init__(self, t_vals):
         super(self.__class__, self).__init__(t_vals, self.__class__.__val_name__, self.__class__.__dim__)
 RegisterSignalClass(Signal4d)
-        
+
 class Trajectory3d(object):
     def __init__(self, t_vals):
         assert np.shape(t_vals) == (8, len(t_vals[0]))
@@ -93,16 +93,16 @@ class Trajectory3d(object):
         if name == 't_xyz':
             self._t.set(value[0])
             self._xyz.set(value[1:])
-            return 
+            return
         if name == 't_xyzw':
             self._t.set(value[0])
             self._xyzw.set(value[1:])
-            return 
+            return
         if name == 't_xyz_xyzw':
             self._t.set(value[0])
             self._xyz.set(value[1:4])
             self._xyzw.set(value[4:])
-            return 
+            return
         self.__getattribute__('_' + name).set(value)
 
     @classmethod
