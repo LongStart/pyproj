@@ -28,6 +28,16 @@ def AngularVelocityMagnitude(ang_vel):
     mag = Signal1d.from_t_x(ang_vel.t, Magnitude(ang_vel.xyz))
     return mag
 
+def AddTimeDiffToTumTraj(filename, t_diff):
+    import os
+    out_filename = os.path.dirname(filename) + os.sep + "aligned_" + os.path.basename(filename)
+    with open(out_filename, 'w') as f_out:
+        with open(filename, 'r') as f_in:
+            for line in f_in.readlines():
+                line_data = line.split(" ")
+                line_data[0] = str(float(line_data[0]) + t_diff)
+                f_out.write(" ".join(line_data))
+
 if __name__ == "__main__":
     from sys import argv
     if(len(argv) < 2):
@@ -57,6 +67,7 @@ if __name__ == "__main__":
             ang_vel.t += dt
             ang_vel_mag.t += dt
             print("dt: {}".format(dt))
+            AddTimeDiffToTumTraj(traj_filename, dt)
 
         quat_for_plt["quat_{}".format(idx)] = traj.t_xyzw
         ang_vel_for_plt["ang_vel_{}".format(idx)] = ang_vel.t_xyz
