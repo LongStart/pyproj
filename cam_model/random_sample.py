@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # board_image_corrected = cam.Project(board.Points(), distort=False)
     # board_image = cam.Project(board.Points())
 
-    target_traj = TargetOrientationPoseSpline(ctrl_point_num=20, time=50, random_range=[[-1,-.7, -1],[1,-2, 1]])
+    target_traj = TargetOrientationPoseSpline(ctrl_point_num=20, time=60, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
     positions = target_traj.VizPositionCurve()
     control_points = target_traj.VizControlPoses()
 
@@ -50,9 +50,9 @@ if __name__ == "__main__":
         for image_undist, image in board_images:
             fig_uv = plt.clf()
             plt.axis([0, cam.resolution[0], cam.resolution[1], 0])
-            plt.plot(image_undist.T[0], image_undist.T[1], "*")
+            plt.plot(image_undist.T[0], image_undist.T[1], "o")
             plt.plot(image.T[0], image.T[1], "*")
             plt.grid(1)
-            plt.pause(1e-8)
+            plt.pause(1e-3)
 
 
