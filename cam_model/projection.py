@@ -80,8 +80,8 @@ if __name__ == "__main__":
 
     fig_uv = plt.figure()
     plt.axis([0, cam.resolution[0], cam.resolution[1], 0])
-    plt.plot(*board_image.T, "*")
-    plt.plot(*board_image_corrected.T, "*")
+    plt.plot(board_image.T[0], board_image.T[1], "*")
+    plt.plot(board_image_corrected.T[0], board_image_corrected.T[1], "*")
     plt.grid(1)
 
 
