@@ -75,7 +75,7 @@ if __name__ == "__main__":
     cv_board_pts = np.array([board.Points(), board.Points()], dtype=np.float32)
     # ptsOut = cv.undistortPoints(cv_board_img, cam.intrinsic, cam.distortion)
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(cv_board_pts, cv_board_img, tuple(cam.resolution[::-1]), None, None)
-    print(rvecs)
+    print(mtx)
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
