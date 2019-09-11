@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation as R
+import cv2 as cv
 
 class CalibrationBoard(object):
     def __init__(self, position=[0,0,0.], orientation=[0,0,0,1.], size_w_h=[6,4], spacing=0.1):
@@ -18,10 +19,15 @@ class CalibrationBoard(object):
                 point_mat[self.size_w_h[1] * i + j] = self.orientation.apply(np.array([i * self.spacing, j * self.spacing, 0])) + self.position
         return point_mat
 
-
+    def BodyFramePoints(self):
+        point_mat = np.zeros((self.size_w_h[0]* self.size_w_h[1], 3))
+        for i in range(self.size_w_h[0]):
+            for j in range(self.size_w_h[1]):
+                point_mat[self.size_w_h[1] * i + j] = np.array([i * self.spacing, j * self.spacing, 0])
+        return point_mat
 
 class PinholeCamera():
-    def __init__(self, position=[0,0,0.], orientation=[0,0,0,1.], resolution=[640,480], intrinsic=np.array([500., 500, 320, 240]), distortion=np.zeros(5)):
+    def __init__(self, position=[0,0,0.], orientation=[0,0,0,1.], resolution=[640,480], intrinsic=np.array([500., 500, 320, 240]), distortion=[0.]*5):
         self.position = np.array(position)
         self.orientation = R.from_quat(orientation)
         self.intrinsic = np.identity(3)
@@ -29,7 +35,7 @@ class PinholeCamera():
         self.intrinsic[1,1] = intrinsic[1]
         self.intrinsic[0,2] = intrinsic[2]
         self.intrinsic[1,2] = intrinsic[3]
-        self.distortion = distortion
+        self.distortion = np.array(distortion)
         self.resolution = resolution
 
     @staticmethod
@@ -64,6 +70,12 @@ if __name__ == "__main__":
     cam = PinholeCamera(position=[0, 0, -1], distortion=[0.2, -0.1, 0, 0, 2])
     board_image_corrected = cam.Project(board.Points(), distort=False)
     board_image = cam.Project(board.Points())
+
+    cv_board_img = np.array([board_image, board_image], dtype=np.float32)
+    cv_board_pts = np.array([board.Points(), board.Points()], dtype=np.float32)
+    # ptsOut = cv.undistortPoints(cv_board_img, cam.intrinsic, cam.distortion)
+    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(cv_board_pts, cv_board_img, tuple(cam.resolution[::-1]), None, None)
+    print(rvecs)
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
