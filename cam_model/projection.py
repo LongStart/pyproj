@@ -4,13 +4,16 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation as R
 import cv2 as cv
+import matplotlib.cm as cm
 
 class CalibrationBoard(object):
-    def __init__(self, position=[0,0,0.], orientation=[0,0,0,1.], size_w_h=[6,4], spacing=0.1):
+    def __init__(self, position=[0,0,0.], orientation=[0,0,0], size_w_h=[6,4], spacing=0.1):
         self.position = np.array(position)
-        self.orientation = R.from_quat(orientation)
+        self.orientation = R.from_rotvec(orientation)
         self.size_w_h = size_w_h
         self.spacing = spacing
+        self.center_local = np.array([(size_w_h[0] - 1) * spacing * 0.5, (size_w_h[1] - 1) * spacing * 0.5, 0])
+        self.center_global = self.orientation.apply(self.center_local) + self.position
 
     def Points(self):
         point_mat = np.zeros((self.size_w_h[0]* self.size_w_h[1], 3))
@@ -27,9 +30,10 @@ class CalibrationBoard(object):
         return point_mat
 
 class PinholeCamera():
-    def __init__(self, position=[0,0,0.], orientation=[0,0,0,1.], resolution=[640,480], intrinsic=np.array([500., 500, 320, 240]), distortion=[0.]*5):
+    def __init__(self, position=[0,0,0.], orientation=[0,0,0], resolution=[640,480], intrinsic=np.array([500., 500, 320, 240]), distortion=[0.]*5):
         self.position = np.array(position)
-        self.orientation = R.from_quat(orientation)
+        self.orientation = R.from_rotvec(orientation)
+        self.intrinsic_array = intrinsic
         self.intrinsic = np.identity(3)
         self.intrinsic[0,0] = intrinsic[0]
         self.intrinsic[1,1] = intrinsic[1]
@@ -66,21 +70,40 @@ class PinholeCamera():
         return np.hstack((self.position, self.orientation.apply([0,0,1])))
 
 if __name__ == "__main__":
-    board = CalibrationBoard(position=[-0.2, -0.2, 0])
-    cam = PinholeCamera(position=[0, 0, -1], distortion=[0.2, -0.1, 0, 0, 2])
+    np.set_printoptions(precision=5, linewidth=np.inf)
+    board = CalibrationBoard(position=[0., 0., 0], orientation=[math.pi/2,0.,0.])
+    # cam = PinholeCamera(position=[0, 0.2, -1], orientation=[0.,0.,0.], distortion=[0.2, -0.1, 0, 0, 2])
+    cam = PinholeCamera(position=[0.25, -0.8, 0.15], orientation=[-math.pi/2,0.,0.])
     board_image_corrected = cam.Project(board.Points(), distort=False)
     board_image = cam.Project(board.Points())
 
-    cv_board_img = np.array([board_image, board_image], dtype=np.float32)
-    cv_board_pts = np.array([board.Points(), board.Points()], dtype=np.float32)
-    # ptsOut = cv.undistortPoints(cv_board_img, cam.intrinsic, cam.distortion)
+    cv_board_img = np.array([board_image], dtype=np.float32)
+    cv_board_pts = np.array([board.BodyFramePoints()], dtype=np.float32)
+    ptsOut = cv.undistortPoints(cv_board_img, cam.intrinsic, cam.distortion)
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(cv_board_pts, cv_board_img, tuple(cam.resolution[::-1]), None, None)
-    print(mtx)
+    rotvec_board_to_cam = (cam.orientation.inv() * board.orientation).as_rotvec()
+    tran_board_to_cam = cam.orientation.inv().apply(board.position - cam.position)
+
+    # print(rotvec_board_to_cam)
+    # print(tran_board_to_cam)
+    # print("dist: {}".format(cam.distortion))
+    # print("intrin: {}".format(cam.intrinsic_array))
+    print("self.pts_3d[idx]: {}".format(board.BodyFramePoints()))
+    imgpts, jac = cv.projectPoints(board.BodyFramePoints(), rotvec_board_to_cam, tran_board_to_cam, cam.intrinsic, cam.distortion)
+    # print("projected: ")
+    # print(imgpts.reshape(24,2))
+    # plt.imshow(jac, interpolation='nearest', cmap=cm.Greys_r)
+    # plt.show()
+    # imgpts = imgpts.ravel()
+    imgpts = imgpts.reshape((24,2))
+    print(imgpts.shape)
+    
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.set_aspect('equal')
     ax.scatter(*board.Points().T)
+    # ax.scatter([0],[0],[0], marker='+', color='r')
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     ax.set_zlim(-1, 1)
@@ -92,8 +115,12 @@ if __name__ == "__main__":
 
     fig_uv = plt.figure()
     plt.axis([0, cam.resolution[0], cam.resolution[1], 0])
-    plt.plot(board_image.T[0], board_image.T[1], "*")
+    # plt.plot(board_image.T[0], board_image.T[1], "*")
     plt.plot(board_image_corrected.T[0], board_image_corrected.T[1], "*")
+    plt.plot(imgpts.T[0], imgpts.T[1], ".")
+    plt.plot([320], [240], "+", markersize=15)
+    plt.xlabel('U')
+    plt.ylabel('V')
     plt.grid(1)
 
 

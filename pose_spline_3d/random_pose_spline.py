@@ -24,6 +24,9 @@ class TargetOrientationPoseSpline(object):
         self.target_point = np.array(target_point)
         self.bsp = bsplines.BSplinePose(4, sm.RotationVector())
         self.ctrl_point_num = ctrl_point_num
+        random_range = np.array(random_range) + self.target_point
+        print(random_range)
+        
         self.curve = self.TargetOrientedPose(ctrl_point_num, random_range)
         self.time = time
 
