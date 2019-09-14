@@ -10,11 +10,11 @@ from random_pose_spline import *
 import cv2 as cv
 
 class CalibrationSampler(object):
-    def __init__(self, sample_num=10, ctrl_point_num=20, time=60):
-        self.board = CalibrationBoard(orientation=[math.pi / 2, 0, 0])
-        self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
-        # self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[0,-.8, 0],[0.,-.8, 0]])
-        self.camera = PinholeCamera()
+    def __init__(self, sample_num=10, ctrl_point_num=20, time=60, cam_distortion=[0.]*5):
+        self.board = CalibrationBoard(orientation=[math.pi / 2, 0, 0], size_w_h=[3,2])
+        # self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
+        self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[0,-.8, 0],[0.,-.8, 0]])
+        self.camera = PinholeCamera(distortion=cam_distortion)
         self.cam_poses = np.zeros((sample_num, 2))
         self.tf_board_to_cam = np.zeros((sample_num, 2))
         self.UpdateSample(sample_num)
@@ -42,6 +42,7 @@ class CalibrationSampler(object):
         
         self.tf_board_to_cam[:,0] = (R.from_rotvec(-self.cam_poses[:,0]) * self.board.orientation).as_rotvec()
         self.tf_board_to_cam[:,1] = R.from_rotvec(-self.cam_poses[:,0]).apply(self.board.position - self.cam_poses[:,1]) 
+        # print("cam: {}".format(self.cam_poses))
         # print("cam: {}".format(self.cam_poses[0]))
         # print("tf: {}".format(self.tf_board_to_cam[:,1]))
         
@@ -52,10 +53,10 @@ class CalibrationSampler(object):
             self.camera.orientation = R.from_rotvec(pose[0])
             self.camera.position = pose[1]
             board_points.append(self.camera.Project(self.board.Points()))
-        return np.array(board_points).astype('float32')
+        return np.array(board_points)
         
     def BodyFramePoints(self):
-        return np.array([self.board.BodyFramePoints()] * self.sample_num).astype('float32')
+        return np.array([self.board.BodyFramePoints()] * self.sample_num)
 
 if __name__ == "__main__":
     sampler = CalibrationSampler()

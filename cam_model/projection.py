@@ -70,10 +70,10 @@ class PinholeCamera():
         return np.hstack((self.position, self.orientation.apply([0,0,1])))
 
 if __name__ == "__main__":
-    np.set_printoptions(precision=5, linewidth=np.inf)
-    board = CalibrationBoard(position=[0., 0., 0], orientation=[math.pi/2,0.,0.])
+    np.set_printoptions(precision=10, linewidth=np.inf)
+    board = CalibrationBoard(position=[0., 0., 0], orientation=[math.pi/2,0.,0.], size_w_h=[2,2])
     # cam = PinholeCamera(position=[0, 0.2, -1], orientation=[0.,0.,0.], distortion=[0.2, -0.1, 0, 0, 2])
-    cam = PinholeCamera(position=[0.25, -0.8, 0.15], orientation=[-math.pi/2,0.,0.])
+    cam = PinholeCamera(position=[0.05, -0.8, 0.05], orientation=[-math.pi/2,0.,0.], distortion=[0.2, -0.1, 0, 0, 2])
     board_image_corrected = cam.Project(board.Points(), distort=False)
     board_image = cam.Project(board.Points())
 
@@ -84,19 +84,30 @@ if __name__ == "__main__":
     rotvec_board_to_cam = (cam.orientation.inv() * board.orientation).as_rotvec()
     tran_board_to_cam = cam.orientation.inv().apply(board.position - cam.position)
 
-    # print(rotvec_board_to_cam)
-    # print(tran_board_to_cam)
-    # print("dist: {}".format(cam.distortion))
-    # print("intrin: {}".format(cam.intrinsic_array))
-    print("self.pts_3d[idx]: {}".format(board.BodyFramePoints()))
-    imgpts, jac = cv.projectPoints(board.BodyFramePoints(), rotvec_board_to_cam, tran_board_to_cam, cam.intrinsic, cam.distortion)
-    # print("projected: ")
-    # print(imgpts.reshape(24,2))
-    # plt.imshow(jac, interpolation='nearest', cmap=cm.Greys_r)
-    # plt.show()
-    # imgpts = imgpts.ravel()
-    imgpts = imgpts.reshape((24,2))
-    print(imgpts.shape)
+    if 0:
+        print("project points input: ")
+        print(board.BodyFramePoints())
+        print(rotvec_board_to_cam)
+        print(tran_board_to_cam)
+        print(cam.intrinsic)
+        print(cam.distortion)
+    imgpts0, jac = cv.projectPoints(board.BodyFramePoints(), rotvec_board_to_cam, tran_board_to_cam, cam.intrinsic, cam.distortion)
+    # print(imgpts0.ravel())
+    eps = 1e-8
+    tran_inc = tran_board_to_cam + np.array([0,  0, eps])
+    # left_rot_inc = (R.from_rotvec([ 0, 0,eps]) * R.from_rotvec(rotvec_board_to_cam)).as_rotvec()
+    left_rot_inc = (R.from_rotvec([ 0,eps, 0]) * R.from_rotvec(rotvec_board_to_cam)).as_rotvec()
+    # left_rot_inc = (R.from_rotvec([ eps, 0, 0]) * R.from_rotvec(rotvec_board_to_cam)).as_rotvec()
+    right_rot_inc = (R.from_rotvec(rotvec_board_to_cam) * R.from_rotvec([ 0,eps, 0])).as_rotvec()
+    imgpts1, jac_temp = cv.projectPoints(board.BodyFramePoints(), left_rot_inc, tran_board_to_cam, cam.intrinsic, cam.distortion)
+    # imgpts = imgpts.reshape((24,2))
+    dp_dx = (imgpts1 - imgpts0) / eps
+    # print("num: {},\nana: {}".format(dp_dx.ravel(), jac[:, 0:2]))
+
+    imgpts = imgpts0
+    # print(imgpts.shape)
+    residual = board_image.ravel() - imgpts.ravel()
+    print("residual: {}".format(residual))
     
 
     fig = plt.figure()
