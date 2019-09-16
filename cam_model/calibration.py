@@ -36,7 +36,7 @@ class StateVector():
         result = deepcopy(this)
         result.intrinsic_ += other.intrinsic_
         result.distortion += other.distortion
-        
+
         result.frame_pose[:, 1] += other.frame_pose[:, 1]
         result.frame_pose[:, 0] = (R.from_rotvec(other.frame_pose[:, 0]) * R.from_rotvec(this.frame_pose[:, 0])).as_rotvec()
         # print(other.intrinsic_)
@@ -47,7 +47,7 @@ class StateVector():
         assert(val.shape == (4,))
         # print("set intrinsic: {}".format(val))
         self.intrinsic_ = val
-    
+
     def get_intrinsic(self):
         mat = np.identity(3)
         mat[0,0] = self.intrinsic_[0]
@@ -80,7 +80,7 @@ class StateVector():
         self.intrinsic_ = val[:4]
         self.distortion = val[4:9]
         self.frame_pose = np.reshape(val[9:], self.frame_pose.shape)
-    
+
     data = property(get_data, set_data)
 
 class OptimizationMask(object):
@@ -90,7 +90,7 @@ class OptimizationMask(object):
         self.frame_num = frame_num
         self.shape_state = (self.len_state,)
         self.shape_jac = (self.len_residual, self.len_state)
-        self.mode = 'distortion'
+        self.mode = 'pose'
         # self.mode = 'full'
         self.callback_dict = {
             'pose': (self.extractPose, self.composeByPose),
@@ -102,53 +102,53 @@ class OptimizationMask(object):
 
     #extract jacobian
     def extractDistortion(self, val):
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return val[:,4:9]
 
     #compose state vector
     def composeByDistortion(self, val):
-        assert(val.shape == (5,)) 
+        assert(val.shape == (5,))
         return np.hstack([np.zeros(4), val, np.zeros(self.len_state - 9)])
-    
+
     #extract jacobian
     def extractIntrisic(self, val):
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return val[:,:4]
 
     #compose state vector
     def composeByIntrisic(self, val):
-        assert(val.shape == (4,)) 
+        assert(val.shape == (4,))
         return np.hstack([val, np.zeros(self.len_state - len(val))])
 
     #extract jacobian
     def extractPose(self, val):
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return val[:,9:]
 
     #compose state vector
     def composeByPose(self, val):
-        assert(val.shape == (self.len_state - 9,)) 
+        assert(val.shape == (self.len_state - 9,))
         return np.hstack([np.zeros(9), val])
 
     #extract jacobian
     def extractTranslation(self, val):
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return np.hstack([val[:, 9 + 6 * i + 3: 9 + 6 * i + 6] for i in range(self.frame_num)])
 
     #compose state vector
     def composeByTranslation(self, val):
-        assert(val.shape == (self.frame_num * 3,)) 
+        assert(val.shape == (self.frame_num * 3,))
         poses = np.hstack([np.zeros((self.frame_num, 3)), val.reshape((self.frame_num, 3))]).ravel()
         return np.hstack([np.zeros(9), poses])
 
     #extract jacobian
     def extractRotation(self, val):
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return np.hstack([val[:, 9 + 6 * i: 9 + 6 * i + 3] for i in range(self.frame_num)])
 
     #compose state vector
     def composeByRotation(self, val):
-        assert(val.shape == (self.frame_num * 3,)) 
+        assert(val.shape == (self.frame_num * 3,))
         poses = np.hstack([val.reshape((self.frame_num, 3)), np.zeros((self.frame_num, 3))]).ravel()
         return np.hstack([np.zeros(9), poses])
 
@@ -156,12 +156,12 @@ class OptimizationMask(object):
     def extractFull(self, val):
         # print(val.shape)
         # print(self.shape_jac)
-        assert(val.shape == self.shape_jac) 
+        assert(val.shape == self.shape_jac)
         return val
 
     #compose state vector
     def composeByFull(self, val):
-        assert(val.shape == (self.len_state, )) 
+        assert(val.shape == (self.len_state, ))
         return val
 
     def Extract(self, val):
@@ -170,7 +170,7 @@ class OptimizationMask(object):
     def Compose(self, val):
         return self.callback_dict[self.mode][1](val)
 
-    
+
 
 class PinholeCalibrationProblem(Problem):
     def __init__(self, pts_3d, pts_2d):
@@ -188,7 +188,6 @@ class PinholeCalibrationProblem(Problem):
         eps_mat = np.identity(3) * eps
         project_incs = np.array([np.zeros(self.point_num * 2)] * 3)
         project_base = np.zeros(self.point_num * 2)
-        print("distortion debug: {}".format(x.distortion))
         project_base, jac = cv.projectPoints(self.pts_3d[idx], x.rotation(idx), x.translation(idx), x.get_intrinsic(), x.distortion)
         for i in range(3):
             rot_inc = (R.from_rotvec(eps_mat[i]) * R.from_rotvec(x.rotation(idx))).as_rotvec()
@@ -197,9 +196,9 @@ class PinholeCalibrationProblem(Problem):
         jac = (project_incs - project_base.ravel()).T / eps
         # print(jac)
         return jac
-        
-        
-        
+
+
+
     def frameResidual(self, x, idx):
         if 0:
             print("project points input: ")
@@ -213,7 +212,7 @@ class PinholeCalibrationProblem(Problem):
         frame_residual = project_2d.ravel() - self.pts_2d[idx].ravel()
         # print("cv_jac: ")
         # print(cv_jac[:, 3:6])
- 
+
         jac = np.zeros(cv_jac.shape)
         # jac[:, 9:12] = cv_jac[:,:3]    #rotation vector
         jac[:, 9:12] = self.frameRotationJac(x, idx)    #rotation vector
@@ -225,7 +224,7 @@ class PinholeCalibrationProblem(Problem):
 
     def residual(self, x):
         if x == self.last_x:
-            return self.last_res 
+            return self.last_res
 
         frame_residuals = []
         self.last_jac = np.zeros((self.frame_num * self.point_num * 2, len(x.data)))
@@ -245,7 +244,7 @@ class PinholeCalibrationProblem(Problem):
         # j = self.last_jac[:, -3:]
         # print(j.T.dot(self.last_res) + self.last_res.dot(j))
         return self.last_res
-    
+
     def jac(self, x):
         while x != self.last_x:
             self.residual(x)
@@ -269,23 +268,23 @@ if __name__ == "__main-__":
 
 if __name__ == "__main__":
     np.set_printoptions(precision=5, linewidth=np.inf)
-    sampler = CalibrationSampler(sample_num=1, cam_distortion=[0.2, -0.1, 0., 0., 2.])
+
+    sampler = CalibrationSampler(sample_num=20, cam_distortion=[0.2, -0.3, 0., 0., 2.])
     # sampler.camera.distortion = np.array([0., 5., 0., 0.2, 2.])
     # sample_pts_2d = sampler.ProjectedPoints()
     # frame_num = 2
-    
+
     problem = PinholeCalibrationProblem(sampler.BodyFramePoints(), sampler.ProjectedPoints())
     guess = StateVector(sampler.sample_num)
-    guess.set_intrinsic(sampler.camera.intrinsic_array)
-    # guess.distortion = np.array([0.] * 5)
-    guess.distortion = sampler.camera.distortion + np.array([0., 0.01, 0, 0, 0])
-    # guess.distortion = np.array([0.2, -0.1, 0, 0, 2.1])
-    # guess.frame_pose = sampler.tf_board_to_cam
-    guess.frame_pose = sampler.tf_board_to_cam
-    # guess.frame_pose += 0.1
-    # guess.frame_pose[:, 0] = (R.from_rotvec([1e-1, 0.1, 0]) * R.from_rotvec(guess.frame_pose[:, 0])).as_rotvec()
-    # print(guess.frame_pose)
-    # quit()
-    # print(guess.get_intrinsic())
-    # quit()
-    problem.solve(guess, verbose=5, step=1)
+    guess.set_intrinsic(sampler.camera.intrinsic_array + 5)
+    # guess.distortion = sampler.camera.distortion
+    guess.distortion = np.array([0.] * 5)
+    guess.frame_pose = sampler.tf_board_to_cam + 0.5
+    problem.solve(guess, verbose=2, step=25)
+
+    if 0:
+        ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(
+                sampler.BodyFramePoints().astype('float32'),
+                sampler.ProjectedPoints().astype('float32'),
+                tuple(sampler.camera.resolution[::-1]), None, None)
+        print(dist)

@@ -15,7 +15,7 @@ def GaussNewton(problem, guess, step=20, verbose=0):
         elif verbose > 2:
             print('x: {}, j:\n{}, cost: {}'.format(x, j, problem.cost(x)))
         elif verbose > 1:
-            print('x: {}, cost: {}'.format(x, problem.cost(x)))
+            print('it: {}, cost: {}'.format(i, problem.cost(x)))
         elif verbose > 0:
             print("it: {}".format(i))
 
