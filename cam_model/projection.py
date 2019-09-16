@@ -29,6 +29,19 @@ class CalibrationBoard(object):
                 point_mat[self.size_w_h[1] * i + j] = np.array([i * self.spacing, j * self.spacing, 0])
         return point_mat
 
+def PinholeCameraDistortPoint(distortion, intrinsic,  point_in_uv):
+    '''
+    reference: https://www.mathworks.com/help/vision/ug/camera-calibration.html
+    '''
+    k1, k2, p1, p2, k3 = distortion
+    f = np.array([intrinsic[0,0], intrinsic[1,1]])
+    c = np.array([intrinsic[0,2], intrinsic[1,2]])
+    x, y = (point_in_uv - c)/f
+    r_2 = x**2 + y**2
+    x_dist = x * (1 + k1 * r_2 + k2 * r_2 **2 + k3 * r_2 ** 3) + 2 * p1 * x*y + p2 * (r_2 + 2 * x**2)
+    y_dist = y * (1 + k1 * r_2 + k2 * r_2 **2 + k3 * r_2 ** 3) + 2 * p2 * x*y + p1 * (r_2 + 2 * y**2)
+    return np.array([x_dist, y_dist]) * f + c
+
 class PinholeCamera():
     def __init__(self, position=[0,0,0.], orientation=[0,0,0], resolution=[640,480], intrinsic=np.array([500., 500, 320, 240]), distortion=[0.]*5):
         self.position = np.array(position)
@@ -42,22 +55,8 @@ class PinholeCamera():
         self.distortion = np.array(distortion)
         self.resolution = resolution
 
-    @staticmethod
-    def DistortPoint(distortion, intrinsic,  point_in_uv):
-        '''
-        reference: https://www.mathworks.com/help/vision/ug/camera-calibration.html
-        '''
-        k1, k2, p1, p2, k3 = distortion
-        f = np.array([intrinsic[0,0], intrinsic[1,1]])
-        c = np.array([intrinsic[0,2], intrinsic[1,2]])
-        x, y = (point_in_uv - c)/f
-        r_2 = x**2 + y**2
-        x_dist = x * (1 + k1 * r_2 + k2 * r_2 **2 + k3 * r_2 ** 3) + 2 * p1 * x*y + p2 * (r_2 + 2 * x**2)
-        y_dist = y * (1 + k1 * r_2 + k2 * r_2 **2 + k3 * r_2 ** 3) + 2 * p2 * x*y + p1 * (r_2 + 2 * y**2)
-        return np.array([x_dist, y_dist]) * f + c
-
     def Distort(self, points_in_uv):
-        return np.vstack([PinholeCamera.DistortPoint(self.distortion, self.intrinsic, p) for p in points_in_uv])
+        return np.vstack([PinholeCameraDistortPoint(self.distortion, self.intrinsic, p) for p in points_in_uv])
 
     def Project(self, points, distort=True):
         points_in_cam = self.orientation.inv().apply(points - self.position)
@@ -108,7 +107,7 @@ if __name__ == "__main__":
     # print(imgpts.shape)
     residual = board_image.ravel() - imgpts.ravel()
     print("residual: {}".format(residual))
-    
+
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
