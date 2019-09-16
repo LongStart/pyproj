@@ -12,8 +12,8 @@ import cv2 as cv
 class CalibrationSampler(object):
     def __init__(self, sample_num=10, ctrl_point_num=20, time=60, cam_distortion=[0.]*5):
         self.board = CalibrationBoard(orientation=[math.pi / 2, 0, 0], size_w_h=[6,4])
-        # self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
-        self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[0,-.8, 0],[0.,-.8, 0]])
+        self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
+        # self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[0,-.8, 0],[0.,-.8, 0]])
         self.camera = PinholeCamera(distortion=cam_distortion)
         self.cam_poses = np.zeros((sample_num, 2))
         self.tf_board_to_cam = np.zeros((sample_num, 2))
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     sampler.camera.distortion = np.array([0.2, -0.1, 0, 0, 2])
 
     #opencv calibration
-    if 1:
+    if 0:
         sampler.UpdateSample(20)
         ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(
             sampler.BodyFramePoints().astype('float32'),

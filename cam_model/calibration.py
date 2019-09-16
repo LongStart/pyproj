@@ -90,7 +90,7 @@ class OptimizationMask(object):
         self.frame_num = frame_num
         self.shape_state = (self.len_state,)
         self.shape_jac = (self.len_residual, self.len_state)
-        self.mode = 'pose'
+        self.mode = 'not_distortion'
         # self.mode = 'full'
         self.callback_dict = {
             'pose': (self.extractPose, self.composeByPose),
@@ -98,6 +98,7 @@ class OptimizationMask(object):
             'rotation': (self.extractRotation, self.composeByRotation),
             'intrinsic': (self.extractIntrisic, self.composeByIntrisic),
             'distortion': (self.extractDistortion, self.composeByDistortion),
+            'not_distortion': (self.extractNotDistortion, self.composeByNotDistortion),
             'full': (self.extractFull, self.composeByFull)}
 
     #extract jacobian
@@ -109,6 +110,16 @@ class OptimizationMask(object):
     def composeByDistortion(self, val):
         assert(val.shape == (5,))
         return np.hstack([np.zeros(4), val, np.zeros(self.len_state - 9)])
+
+    #extract jacobian
+    def extractNotDistortion(self, val):
+        assert(val.shape == self.shape_jac)
+        return np.hstack([val[:, :4], val[:, 9:]])
+
+    #compose state vector
+    def composeByNotDistortion(self, val):
+        assert(val.shape == (self.len_state - 5,))
+        return np.hstack([val[:4], np.zeros(5), val[4:]])
 
     #extract jacobian
     def extractIntrisic(self, val):
@@ -269,18 +280,24 @@ if __name__ == "__main-__":
 if __name__ == "__main__":
     np.set_printoptions(precision=5, linewidth=np.inf)
 
-    sampler = CalibrationSampler(sample_num=20, cam_distortion=[0.2, -0.3, 0., 0., 2.])
+    sampler = CalibrationSampler(sample_num=40, cam_distortion=[0.2, -0.1, 0.1, 0.1, 2.])
     # sampler.camera.distortion = np.array([0., 5., 0., 0.2, 2.])
     # sample_pts_2d = sampler.ProjectedPoints()
     # frame_num = 2
 
     problem = PinholeCalibrationProblem(sampler.BodyFramePoints(), sampler.ProjectedPoints())
+    problem.mask.mode = 'not_distortion'
     guess = StateVector(sampler.sample_num)
-    guess.set_intrinsic(sampler.camera.intrinsic_array + 5)
+    guess.set_intrinsic(sampler.camera.intrinsic_array + 10)
     # guess.distortion = sampler.camera.distortion
-    guess.distortion = np.array([0.] * 5)
-    guess.frame_pose = sampler.tf_board_to_cam + 0.5
-    problem.solve(guess, verbose=2, step=25)
+    guess.distortion = np.array([0., -0., 0., 0., 0.])
+    guess.frame_pose = sampler.tf_board_to_cam + 0.2
+    problem.solve(guess, verbose=2, step=10)
+
+    problem.mask.mode = 'full'
+    problem.solve(guess, verbose=2, step=20)
+    print(problem.last_x.distortion)
+
 
     if 0:
         ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(
