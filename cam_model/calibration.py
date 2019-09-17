@@ -281,20 +281,14 @@ if __name__ == "__main__":
     np.set_printoptions(precision=5, linewidth=np.inf)
 
     sampler = CalibrationSampler(sample_num=40, cam_distortion=[0.2, -0.1, 0.1, 0.1, 2.])
-    # sampler.camera.distortion = np.array([0., 5., 0., 0.2, 2.])
-    # sample_pts_2d = sampler.ProjectedPoints()
-    # frame_num = 2
 
     problem = PinholeCalibrationProblem(sampler.BodyFramePoints(), sampler.ProjectedPoints())
-    problem.mask.mode = 'not_distortion'
+    problem.mask.mode = 'full'
     guess = StateVector(sampler.sample_num)
-    guess.set_intrinsic(sampler.camera.intrinsic_array + 10)
+    guess.set_intrinsic(sampler.camera.model.intrinsic_array + 10)
     # guess.distortion = sampler.camera.distortion
     guess.distortion = np.array([0., -0., 0., 0., 0.])
     guess.frame_pose = sampler.tf_board_to_cam + 0.2
-    problem.solve(guess, verbose=2, step=10)
-
-    problem.mask.mode = 'full'
     problem.solve(guess, verbose=2, step=20)
     print(problem.last_x.distortion)
 
