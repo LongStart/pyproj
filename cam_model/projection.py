@@ -33,6 +33,10 @@ class CalibrationBoard(object):
         tran_board_to_cam = rot_world_to_cam.apply(board.position - cam_pose_rt[1])
         return np.vstack([rotvec_board_to_cam, tran_board_to_cam])
 
+class Pose():
+    def __init__(self, lin_p=np.zeros(3), ang_p=np.zeros(3)):
+        self.lin_p = lin_p
+        self.ang_p = ang_p
 
 def PinholeCameraDistortPoint(distortion, intrinsic,  point_in_uv):
     '''
@@ -81,24 +85,24 @@ class PinholeCamera():
     def Distort(self, points_in_uv):
         return np.vstack([PinholeCameraDistortPoint(self.model.distortion, self.model.intrinsic_mat, p) for p in points_in_uv])
 
-    def Project(self, points, cam_pose_rt_in, distort=True):
+    def Project(self, points, cam_pose, distort=True):
         # assert(cam_pose_rt.shape == (2,3))
-        cam_pose_rt = np.zeros((2,3))
-        if cam_pose_rt_in.shape == (2,3):
-            cam_pose_rt = cam_pose_rt_in
-        elif cam_pose_rt_in.shape == (2,3,3):
-            cam_pose_rt = cam_pose_rt_in[:, 0, :]
-        else:
-            raise TypeError
-        points_in_uv = PinholeCameraProjectPoint(points, cam_pose_rt[0], cam_pose_rt[1], self.model.intrinsic_mat)
+        # cam_pose_rt = np.zeros((2,3))
+        # if cam_pose_rt_in.shape == (2,3):
+        #     cam_pose_rt = cam_pose_rt_in
+        # elif cam_pose_rt_in.shape == (2,3,3):
+        #     cam_pose_rt = cam_pose_rt_in[:, 0, :]
+        # else:
+        #     raise TypeError
+        points_in_uv = PinholeCameraProjectPoint(points, cam_pose.ang_p, cam_pose.lin_p, self.model.intrinsic_mat)
         if distort:
             points_in_uv = self.Distort(points_in_uv)
         return points_in_uv
 
     @staticmethod
-    def Arrow(pose_rt):
-        rot = R.from_rotvec(pose_rt[0])
-        return np.hstack((pose_rt[1], rot.apply([0,0,1])))
+    def Arrow(cam_pose):
+        rot = R.from_rotvec(cam_pose.ang_p)
+        return np.hstack((cam_pose.lin_p, rot.apply([0,0,1])))
 
 if __name__ == "__main__":
     np.set_printoptions(precision=10, linewidth=np.inf)
@@ -106,7 +110,8 @@ if __name__ == "__main__":
     # cam = PinholeCamera(position=[0, 0.2, -1], orientation=[0.,0.,0.], distortion=[0.2, -0.1, 0, 0, 2])
 
     cam = PinholeCamera(model=RadTanPinhole(distortion=[0.2, -0.1, 0, 0, 2]))
-    cam_pose = np.array([[-math.pi/2,0.,0.],[0.05, -0.8, 0.05]])
+    # cam_pose = np.array([[-math.pi/2,0.,0.],[0.05, -0.8, 0.05]])
+    cam_pose = Pose(lin_p=np.array([0.05, -0.8, 0.05]), ang_p=[-math.pi/2,0.,0.])
     board_image_corrected = cam.Project(board.Points(), cam_pose, distort=False)
     board_image = cam.Project(board.Points(), cam_pose)
 
