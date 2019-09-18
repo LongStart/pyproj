@@ -52,11 +52,11 @@ def PinholeCameraProjectPoint(points, cam_rotation, cam_position, intrinsic_mat)
     points_in_uv = np.array([intrinsic_mat.dot(p)[:2]/p[2] for p in points_in_cam])
     return points_in_uv
 
-def GetPointInFieldOfVision(points, width, height):
+def GetPointInROI(points, width, height, pt_size=0.4):
     result = {}
     for i in range(len(points)):
-        if width[0] < points[i][0] < width[1] and height[0] < points[i][1] < height[1]:
-            result[i] = points
+        if width[0] - pt_size< points[i][0] <= width[1] + pt_size and height[0] - pt_size < points[i][1] <= height[1] + pt_size:
+            result[i] = points[i]
     return result
 
 class RadTanPinhole():
@@ -81,8 +81,15 @@ class PinholeCamera():
     def Distort(self, points_in_uv):
         return np.vstack([PinholeCameraDistortPoint(self.model.distortion, self.model.intrinsic_mat, p) for p in points_in_uv])
 
-    def Project(self, points, cam_pose_rt, distort=True):
-        assert(cam_pose_rt.shape == (2,3))
+    def Project(self, points, cam_pose_rt_in, distort=True):
+        # assert(cam_pose_rt.shape == (2,3))
+        cam_pose_rt = np.zeros((2,3))
+        if cam_pose_rt_in.shape == (2,3):
+            cam_pose_rt = cam_pose_rt_in
+        elif cam_pose_rt_in.shape == (2,3,3):
+            cam_pose_rt = cam_pose_rt_in[:, 0, :]
+        else:
+            raise TypeError
         points_in_uv = PinholeCameraProjectPoint(points, cam_pose_rt[0], cam_pose_rt[1], self.model.intrinsic_mat)
         if distort:
             points_in_uv = self.Distort(points_in_uv)

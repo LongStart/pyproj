@@ -6,42 +6,55 @@ from scipy.spatial.transform import Rotation as R
 
 from projection import *
 from random_pose_spline import *
+from pinhole_rollingshutter_cam import RollingShutterCamera
 
 import cv2 as cv
+import sys
 
 class CalibrationSampler(object):
-    def __init__(self, sample_num=10, ctrl_point_num=20, time=60, cam_distortion=[0.]*5):
+    def __init__(self, sample_num=10, ctrl_point_num=20, time=60, camera=PinholeCamera()):
         self.board = CalibrationBoard(orientation=[math.pi / 2, 0, 0], size_w_h=[6,4])
         self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[-.6,-.7, -.6],[.6,-.8, .6]])
         # self.trajectory = TargetOrientationPoseSpline(target_point=self.board.center_global, ctrl_point_num=ctrl_point_num, time=time, random_range=[[0,-.8, 0],[0.,-.8, 0]])
-        self.camera = PinholeCamera(model=RadTanPinhole(distortion=cam_distortion))
-        self.cam_poses = np.zeros((sample_num, 2))
+        self.camera = camera
+        self.cam_states = np.zeros((sample_num, 2))
         self.tf_board_to_cam = np.zeros((sample_num, 2))
         self.UpdateSample(sample_num)
 
     @property
     def sample_num(self):
-        return len(self.cam_poses)
+        return len(self.cam_states)
 
     def UpdateSample(self, sample_num=10):
         sample_t = np.linspace(0, self.trajectory.time, sample_num)
-        self.cam_poses = []
+        self.cam_states = []
         for t in sample_t:
-            self.cam_poses.append([R.from_dcm(self.trajectory.bsp.orientation(t)).as_rotvec(), self.trajectory.bsp.position(t)])
-        self.cam_poses = np.array(self.cam_poses)
-        self.tf_board_to_cam = np.zeros(self.cam_poses.shape)
+            self.cam_states.append([R.from_dcm(self.trajectory.bsp.orientation(t)).as_rotvec(), self.trajectory.bsp.position(t)])
+        self.cam_states = np.array(self.cam_states)
+        self.tf_board_to_cam = np.zeros(self.cam_states.shape)
 
-        self.tf_board_to_cam[:,0] = (R.from_rotvec(-self.cam_poses[:,0]) * self.board.orientation).as_rotvec()
-        self.tf_board_to_cam[:,1] = R.from_rotvec(-self.cam_poses[:,0]).apply(self.board.position - self.cam_poses[:,1])
+        self.tf_board_to_cam[:,0] = (R.from_rotvec(-self.cam_states[:,0]) * self.board.orientation).as_rotvec()
+        self.tf_board_to_cam[:,1] = R.from_rotvec(-self.cam_states[:,0]).apply(self.board.position - self.cam_states[:,1])
 
     def ProjectedPoints(self):
-        return np.array([self.camera.Project(self.board.Points(), cam_pose) for cam_pose in self.cam_poses])
+        return np.array([self.camera.Project(self.board.Points(), cam_pose) for cam_pose in self.cam_states])
 
     def BodyFramePoints(self):
         return np.array([self.board.BodyFramePoints()] * self.sample_num)
 
+    def State(self, t):
+        state = np.zeros((2,3,3))
+
+        state[0, 0, :] = self.trajectory.bsp.position(t)
+        state[0, 1, :] = self.trajectory.bsp.linearVelocity(t)
+        state[0, 2, :] = self.trajectory.bsp.linearVelocity(t)
+        state[0, 0, :] = R.from_dcm(self.trajectory.bsp.orientation(t)).as_rotvec()
+        state[0, 1, :] = self.trajectory.bsp.angularVelocity(t)
+        state[0, 2, :] = [0., 0., 0.]
+        return  state
+
 if __name__ == "__main__":
-    sampler = CalibrationSampler()
+    sampler = CalibrationSampler(camera=RollingShutterCamera())
     sampler.camera.model.distortion = np.array([0.2, -0.1, 0, 0, 2])
 
     #opencv calibration
@@ -53,7 +66,7 @@ if __name__ == "__main__":
             tuple(sampler.camera.resolution[::-1]), None, None)
         print(dist)
 
-    sampler.UpdateSample(200)
+    sampler.UpdateSample(10)
     board_points = sampler.ProjectedPoints()
 
     #animation
