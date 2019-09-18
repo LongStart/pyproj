@@ -286,9 +286,8 @@ if __name__ == "__main__":
     problem.mask.mode = 'full'
     guess = StateVector(sampler.sample_num)
     guess.set_intrinsic(sampler.camera.model.intrinsic_array + 10)
-    # guess.distortion = sampler.camera.distortion
     guess.distortion = np.array([0., -0., 0., 0., 0.])
-    guess.frame_pose = sampler.tf_board_to_cam + 0.2
+    guess.frame_pose = np.array([tf.vector6().reshape(2,3) for tf in sampler.tf_board_to_cam]) + 0.2
     problem.solve(guess, verbose=2, step=20)
     print(problem.last_x.distortion)
 

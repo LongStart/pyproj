@@ -27,16 +27,19 @@ class CalibrationBoard(object):
                 point_mat[self.size_w_h[1] * i + j] = np.array([i * self.spacing, j * self.spacing, 0])
         return point_mat
 
-    def PoseInCameraFrame(self, cam_pose_rt):
-        rot_world_to_cam = R.from_rotvec(-cam_pose_rt[0])
-        rotvec_board_to_cam = (rot_world_to_cam * board.orientation).as_rotvec()
-        tran_board_to_cam = rot_world_to_cam.apply(board.position - cam_pose_rt[1])
-        return np.vstack([rotvec_board_to_cam, tran_board_to_cam])
+    def PoseInCameraFrame(self, cam_state):
+        pose = Pose()
+        pose.ang_p = (R.from_rotvec(-cam_state.ang_p) * self.orientation).as_rotvec()
+        pose.lin_p = R.from_rotvec(-cam_state.ang_p).apply(self.position - cam_state.lin_p)
+        return pose
 
 class Pose():
     def __init__(self, lin_p=np.zeros(3), ang_p=np.zeros(3)):
         self.lin_p = lin_p
         self.ang_p = ang_p
+
+    def vector6(self):
+        return np.hstack([self.ang_p, self.lin_p])
 
 def PinholeCameraDistortPoint(distortion, intrinsic,  point_in_uv):
     '''
@@ -111,7 +114,7 @@ if __name__ == "__main__":
 
     cam = PinholeCamera(model=RadTanPinhole(distortion=[0.2, -0.1, 0, 0, 2]))
     # cam_pose = np.array([[-math.pi/2,0.,0.],[0.05, -0.8, 0.05]])
-    cam_pose = Pose(lin_p=np.array([0.05, -0.8, 0.05]), ang_p=[-math.pi/2,0.,0.])
+    cam_pose = Pose(lin_p=np.array([0.05, -0.8, 0.05]), ang_p=np.array([-math.pi/2,0.,0.]))
     board_image_corrected = cam.Project(board.Points(), cam_pose, distort=False)
     board_image = cam.Project(board.Points(), cam_pose)
 
@@ -125,19 +128,19 @@ if __name__ == "__main__":
     if 0:
         print("project points input: ")
         print(board.BodyFramePoints())
-        print(board.PoseInCameraFrame(cam_pose)[0])
-        print(board.PoseInCameraFrame(cam_pose)[1])
+        print(board.PoseInCameraFrame(cam_pose).ang_p)
+        print(board.PoseInCameraFrame(cam_pose).lin_p)
         print(cam.model.intrinsic_mat)
         print(cam.model.distortion)
-    imgpts0, jac = cv.projectPoints(board.BodyFramePoints(), board.PoseInCameraFrame(cam_pose)[0], board.PoseInCameraFrame(cam_pose)[1], cam.model.intrinsic_mat, cam.model.distortion)
+    imgpts0, jac = cv.projectPoints(board.BodyFramePoints(), board.PoseInCameraFrame(cam_pose).ang_p, board.PoseInCameraFrame(cam_pose).lin_p, cam.model.intrinsic_mat, cam.model.distortion)
     # print(imgpts0.ravel())
     eps = 1e-8
-    tran_inc = board.PoseInCameraFrame(cam_pose)[1] + np.array([0,  0, eps])
+    tran_inc = board.PoseInCameraFrame(cam_pose).lin_p + np.array([0,  0, eps])
     # left_rot_inc = (R.from_rotvec([ 0, 0,eps]) * R.from_rotvec(rotvec_board_to_cam)).as_rotvec()
-    left_rot_inc = (R.from_rotvec([ 0,eps, 0]) * R.from_rotvec(board.PoseInCameraFrame(cam_pose)[0])).as_rotvec()
+    left_rot_inc = (R.from_rotvec([ 0,eps, 0]) * R.from_rotvec(board.PoseInCameraFrame(cam_pose).ang_p)).as_rotvec()
     # left_rot_inc = (R.from_rotvec([ eps, 0, 0]) * R.from_rotvec(rotvec_board_to_cam)).as_rotvec()
-    right_rot_inc = (R.from_rotvec(board.PoseInCameraFrame(cam_pose)[0]) * R.from_rotvec([ 0,eps, 0])).as_rotvec()
-    imgpts1, jac_temp = cv.projectPoints(board.BodyFramePoints(), left_rot_inc, board.PoseInCameraFrame(cam_pose)[1], cam.model.intrinsic_mat, cam.model.distortion)
+    right_rot_inc = (R.from_rotvec(board.PoseInCameraFrame(cam_pose).ang_p) * R.from_rotvec([ 0,eps, 0])).as_rotvec()
+    imgpts1, jac_temp = cv.projectPoints(board.BodyFramePoints(), left_rot_inc, board.PoseInCameraFrame(cam_pose).lin_p, cam.model.intrinsic_mat, cam.model.distortion)
     # imgpts = imgpts.reshape((24,2))
     dp_dx = (imgpts1 - imgpts0) / eps
     # print("num: {},\nana: {}".format(dp_dx.ravel(), jac[:, 0:2]))
