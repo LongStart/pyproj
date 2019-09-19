@@ -11,7 +11,7 @@ from pinhole_rollingshutter_cam import RollingShutterCamera
 
 import cv2 as cv
 import sys
-from pose_state import PoseState
+from rolling_shutter import PoseState
 
 class PoseState1():
     def __init__(self, lin_p=np.zeros(3), lin_v=np.zeros(3), lin_a=np.zeros(3), ang_p=np.zeros(3), ang_v=np.zeros(3), ang_a=np.zeros(3)):
@@ -21,6 +21,14 @@ class PoseState1():
         self.ang_p = ang_p
         self.ang_v = ang_v
         self.ang_a = ang_a
+
+    def __str__(self):
+        lin = np.vstack([self.lin_p, self.lin_v, self.lin_a])
+        ang = np.vstack([self.ang_p, self.ang_v, self.ang_a])
+        return str(np.hstack([ang, lin]))
+
+    def __repr__(self):
+        return self.__str__()
 
     def Propagate(self, dt):
         lin_p = self.lin_p + self.lin_v * dt + 0.5 * self.lin_a * dt * dt
@@ -110,6 +118,7 @@ if __name__ == "__main__":
 
     sampler.UpdateSample(60)
     board_points = sampler.ProjectedPoints()
+    print(board_points.shape)
 
     #animation
     if 1:

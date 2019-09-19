@@ -31,4 +31,5 @@ class TestStatePropagationFunctions(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    np.set_printoptions(precision=3, linewidth=np.inf)
     unittest.main()
