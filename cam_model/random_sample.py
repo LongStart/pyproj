@@ -11,8 +11,9 @@ from pinhole_rollingshutter_cam import RollingShutterCamera
 
 import cv2 as cv
 import sys
+from pose_state import PoseState
 
-class PoseState():
+class PoseState1():
     def __init__(self, lin_p=np.zeros(3), lin_v=np.zeros(3), lin_a=np.zeros(3), ang_p=np.zeros(3), ang_v=np.zeros(3), ang_a=np.zeros(3)):
         self.lin_p = lin_p
         self.lin_v = lin_v
@@ -68,7 +69,7 @@ class CalibrationSampler(object):
         #     self.cam_states.append([R.from_dcm(self.trajectory.bsp.orientation(t)).as_rotvec(), self.trajectory.bsp.position(t)])
         # self.cam_states = np.array(self.cam_states)
         # self.tf_board_to_cam = np.zeros(self.cam_states.shape)
-        
+
         # self.tf_board_to_cam[:,0] = (R.from_rotvec(-self.cam_states[:,0]) * self.board.orientation).as_rotvec()
         # self.tf_board_to_cam[:,1] = R.from_rotvec(-self.cam_states[:,0]).apply(self.board.position - self.cam_states[:,1])
 
