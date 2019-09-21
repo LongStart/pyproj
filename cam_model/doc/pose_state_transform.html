@@ -1,0 +1,136 @@
+<head>
+    <script type="text/javascript" async 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+</head>
+<body>
+    <h2>Conventions</h2>
+    <ul>
+        <li>State S: \((R, t, \omega, v, \beta, a)\)</li>
+        <li>Rotation from A to B: \(R_{BA}\)</li>
+        <li>Frame (world, board, camera): \(F_W\), \(F_B\), \(F_C\)</li>
+    </ul>
+
+    <h2>Scenario 1: Observation in Inertial Frame</h2>
+    <p>
+        Inertial frame \(F_W\). Frame \(F_B\): moving. Point \(P\) fixed on \(F_B\) at \(P_B\).
+    </p>
+    \[
+        S_{BB} = (0, 0, \omega_{BB}, 0, \beta_{BB}, a_{BB})
+    \]
+
+    \[
+        S_{BP} = (I, t_{BP}, 0, 0, 0, 0)
+    \]
+    <p>\(\because\) \(F_W\) is inertial frame</p>
+    <p>\(\therefore \omega_{WW} = 0, a_{WW} = 0, \beta_{WW} = 0\) </p>
+    <!-- <p>\(\therefore \omega_{WW} = 0, a_{WW} = 0, \beta_{WW} = 0\) </p> -->
+
+    \[
+        S_{WB} = (R_{WB}, t_{WB}, R_{WB} \omega_{BB}, v_{WB}, R_{WB} \beta_{BB}, R_{WB} a_{BB})
+    \]
+
+    \[
+        S_{WP} = (0, R_{WB} t_{BP}, R_{WB} \omega_{BB}, \underbrace{R_{WB}\omega_{BB}^\wedge t_{BP} + v_{WB}}_{v_{WP}}, R_{WB} \beta_{BB}, \underbrace{\dot R_{WB} \omega_B^\wedge t_{BP} + R_{WB}\beta_{BB}^\wedge t_{BP} + a_{WB}}_{a_{WP}} )
+    \]
+
+    <h2>Scenario 2: Observation in Non-inertial Frame</h2>
+    <p>
+        Non-inertial frame \(F_C\). Frame \(F_B\): moving. Point \(P\) fixed on \(F_B\) at \(P_B\).
+    </p>
+
+    \[
+        S_{CC} = (I, 0, \omega_{CC}, 0, \beta_{CC}, a_{CC})
+    \]
+
+    \[
+        S_{CB} = (
+            R_{CB}, t_{CB}, 
+            \underbrace{R_{CB} \omega_{BB} - \omega_{CC}}_{\omega_{CB}}, 
+            \underbrace{\dot t_{CB} - \omega_{CC}^\wedge t_{CB}}_{v_{CB}} , 
+            \underbrace{\dot R_{CB} \omega_{BB} + R_{CB} \beta_{BB} - \beta_{CC}}_{\beta_{CB}}, 
+            \underbrace{\underbrace{(R_{CB} a_{BB} - a_{CC})}_{\ddot t_{CB}} - \underbrace{(\beta_{CC}^\wedge t_{CB} + \omega_{CC}^\wedge \dot t_{CB})}}_{a_{CB}})
+            \tag{2-2}
+    \]
+
+    \[
+        S_{CP} = (
+            R_{CB}, R_{CB} t_{BP} + t_{CB}, 
+            \underbrace{R_{CB} \omega_{BB}  - \omega_{CC}}_{\omega_{CP}}, 
+            \underbrace{R_{CB}\omega_{BB}^\wedge t_{BP} + \dot t_{CB} - \omega_{CC}^\wedge t_{CB}}_{v_{CP}}, 
+            \underbrace{\dot R_{CB} \omega_{BB} + R_{CB} \beta_{BB} - \beta_{CC}}_{\beta_{CB}}, 
+            \underbrace{
+                \dot R_{CB}\omega_{BB}^\wedge t_{BP} + R_{CB}\beta_{BB}^\wedge t_{BP} + 
+                \underbrace{(R_{CB} a_{BB} - a_{CC})}_{\ddot t_{CB}} - 
+                \underbrace{(\beta_{CC}^\wedge t_{CB} + \omega_{CC}^\wedge v_{CB}}
+            }_{a_{CP}} )
+    \]
+
+    <!-- <h2>Scenario 3: Inverse</h2>
+    <p>From scenario 2 we can see: \(S_{CB} S_{BP} = S_{CP}\)</p>
+    <p>The inverse of \(S_{CB}\) should satisfy \(S_{CB}^{-1} S_{CP} = S_{BP}\)</p>
+    \[
+            S_{CB}^{-1} = (R_{CB}^\top (\cdot), R_{CB}^\top ((\cdot) - t_{CB}))
+    \] -->
+    <h2>Scenario 4: Camera Observation</h2>
+    <ul>
+            <li>Camera: \(S_{WC} = (R_{WC}, t_{WC}, \omega_{WC}, v_{WC}, \beta_{WC}, a_{WC})\)</li>
+            <li>Board: \(S_{WB} = (R_{WB}, t_{WB}, \omega_{WB}, v_{WB}, \beta_{WB}, a_{WB})\)</li>
+            <li>World: \(S_{W} = (I, 0, 0, 0, 0, 0)\)</li>
+            <li>Point on board: \(S_{BP} = (0, t_{BP}, 0, 0, 0, 0)\)</li>
+    </ul>
+    <p>Solve \(S_{CB}\)</p>
+    <p>refer to formula (2-2)</p>
+    <ul>
+            <li>\(R_{CB} = R_{WC}^\top R_{WB}\)</li>
+            <li>\(t_{CB} = R_{WC}^\top (t_{WB} - t_{WC})\)</li>
+            <li>\(\omega_{BB} = R_{WB}^\top \omega_{WB}\)</li>
+            <li>\(\omega_{CC} = R_{WC}^\top \omega_{WC}\)</li>
+            <li>\(\beta_{BB} = R_{WB}^\top \beta_{WB}\)</li>
+            <li>\(\beta_{CC} = R_{WC}^\top \beta_{WC}\)</li>
+            <li>\(\dot t_{CB} = R_{WC}^\top (v_{WB} - v_{WC})\)</li>
+            <li>
+                \(\dot R_{CB} = 
+                (R_{WC} \omega_{WC}^\wedge)^\top R_{WB} + R_{WC}^\top R_{WB} \omega_{WB}^\wedge = 
+                R_{WC}^\top R_{WB} (\omega_{WB} - R_{CB}^\top \omega_{WC})^\wedge  \)
+            </li>
+    </ul>
+
+    <h3>Additional Denote: \(x_{WB} - x_{WC} = x_{CB}^W\)</h3>
+
+    \[
+        S_{CB} = (
+            R_{WC}^\top R_{WB}, 
+            \underbrace{R_{WC}^\top t_{CB}^W}_{t_{CB}} ,
+            \underbrace{R_{WC}^\top \omega_{CB}^W}_{\omega_{CB}},
+            \underbrace{R_{WC}^\top (v_{CB}^W - \omega_{WC}^\wedge t_{CB}^W}_{v_{CB}}),
+            \underbrace{R_{WC}^\top [\beta_{CB}^W - \omega_{WC}^\wedge \omega_{CB}^W]}_{\beta_{CB}},
+            \underbrace{R_{WC}^\top [
+                    a_{CB}^W + 
+                    \underbrace{\omega_{WC}^\wedge \omega_{WC}^\wedge t_{CB}^W}_{kor} 
+                    \underbrace{-\beta_{WC}^\wedge t_{CB}^W}_{euler} 
+                    \underbrace{-2 \omega_{WC}^\wedge v_{CB}^W}_{center}
+                ]}_{a_{CB}})
+            )
+    \]
+
+    <h3>So the transform \(f_{S(R,t,\omega,v,\beta,a)}(x): X \rightarrow Y\) can be defined:</h3>
+    \[
+        \begin{aligned}
+        & Y_R = S_R X_R \\
+        & Y_t = S_R X_t + S_t \\
+        & Y_\omega = S_R X_\omega + S_t \\
+        & Y_v = (S_R X_v + S_v) + S_\omega^\wedge (R X_t + S_t)  \\
+        & Y_\beta = (S_R X_\beta + S_\beta) + S_\omega^\wedge (S_R X_\omega + S_\omega)  \\
+        & Y_a = (S_R X_a + S_a) + S_\omega^\wedge S_\omega^\wedge (S_R X_t + S_t) + 2 S_\omega^\wedge (S_R X_v + S_v) + S_\beta^\wedge (S_R X_t + S_t) 
+        \end{aligned}
+    \]
+
+    <h3>The inverse of a transform:</h3>
+    \[
+        S^{-1} = (R^\top, -R^\top t, -R^\top \omega, -R^\top v, -R^\top \beta, -R^\top a)
+    \]
+    \[
+        f_S(S^{-1}) = (I,0,0,0,0,0)
+    \]
+</body>
