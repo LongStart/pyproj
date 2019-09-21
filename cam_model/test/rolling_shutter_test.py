@@ -5,12 +5,6 @@ import matplotlib.pyplot as plt
 from random_sample import *
 
 class TestStatePropagationFunctions(unittest.TestCase):
-    def test_state_propagate(self):
-        init_state = np.zeros((2,3,3))
-        init_state[0,1,0] = 0.1 # vx = 0.1
-        height = 10
-        poses = PoseList(init_state, 1e-3/height, height / 2)
-        # print(poses)
 
     def test_project(self):
         # return
