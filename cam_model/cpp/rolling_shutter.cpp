@@ -10,27 +10,13 @@
 #include <vector>
 #include <map>
 
-#if 0
-namespace Eigen
-{
 
-AngleAxisd FromRotVec(const Vector3dR& rotvec)
-{
-  if(rotvec.isZero()) 
-    return AngleAxisd(0, Vector3d::UnitX());
-  return AngleAxisd(rotvec.norm(), rotvec.normalized());
-}
-
-Vector3d AsRotVec(const Quaterniond& q)
-{
-  AngleAxisd a = AngleAxisd(q);
-  return a.axis() * a.angle();
-}
-
-}// namespace Eigen
-#endif
-
+using MatrixX2dR = Eigen::Matrix<double, Eigen::Dynamic, 2, Eigen::RowMajor>;
 using MatrixX3dR = Eigen::Matrix<double, Eigen::Dynamic, 3, Eigen::RowMajor>;
+using MatrixX4dR = Eigen::Matrix<double, Eigen::Dynamic, 4, Eigen::RowMajor>;
+using MatrixXdR = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+using Vector2dR = Eigen::Matrix<double, 1, 2, Eigen::RowMajor>;
 using Vector3dR = Eigen::Matrix<double, 1, 3, Eigen::RowMajor>;
 
 class ScipyRotation
@@ -102,13 +88,13 @@ class ScipyRotation
 };
  
 using R = ScipyRotation;
-
-#if 0
+using IdxPtsMap = std::map<int, std::vector<Vector2dR>>;
+#if 1
 void GetPointInROI(
-  const Eigen::Matrix<-1, 2>& points, 
+  const MatrixX2dR& points, 
   const std::vector<double>& width_range, 
   const std::vector<double>& height_range, 
-  std::map<int, Eigen::Vector2d>& idx_pt_map,
+  IdxPtsMap& idx_pts_map,
   double point_size=0.4)
 {
   assert(width_range.size() == 2);
@@ -121,15 +107,49 @@ void GetPointInROI(
     && height_range.at(0) - point_size < points(i, 1) 
     && height_range.at(1) + point_size > points(i, 1))
     {
-      idx_pt_map[i].push_back(points.row(i));
+      if(idx_pts_map.count(i) == 0)
+        idx_pts_map[i] = IdxPtsMap::mapped_type();
+      idx_pts_map[i].push_back(points.row(i));
     }
   }
+}
+
+MatrixX2dR RollingShutterFuse(
+  const std::vector<MatrixX2dR>& points_by_frames, 
+  int resolution_width)
+{
+  IdxPtsMap idx_pts_map;
+  for(int row_i = 0; row_i < points_by_frames.size(); row_i++)
+  {
+    GetPointInROI(points_by_frames.at(row_i), {0., 0. + resolution_width}, {row_i + 0., row_i + 1.}, idx_pts_map, 0.4);
+  }
+    
+
+  MatrixX2dR pts_uv(idx_pts_map.size(), 2);
+
+  for(const auto& idx_pts_pair: idx_pts_map)
+  {
+    Vector2dR sum = Vector2dR::Zero(1,2);
+    for(const auto& pt: idx_pts_pair.second) sum += pt;
+    Vector2dR mean = sum / idx_pts_pair.second.size();
+    pts_uv.row(idx_pts_pair.first) = mean;
+  }
+  return pts_uv;
 }
 #endif
 
 class PoseState
 {
  public:
+
+  PoseState():
+  lin_p_(Eigen::MatrixXd::Zero(1,3)),
+  lin_v_(Eigen::MatrixXd::Zero(1,3)),
+  lin_a_(Eigen::MatrixXd::Zero(1,3)),
+  ang_p_(Eigen::MatrixXd::Zero(1,3)),
+  ang_v_(Eigen::MatrixXd::Zero(1,3)),
+  ang_a_(Eigen::MatrixXd::Zero(1,3)){}
+
   PoseState(
     const Vector3dR& lin_p,
     const Vector3dR& lin_v,
@@ -165,18 +185,33 @@ class PoseState
   void setAngV(const Vector3dR& in) { ang_v_ = in;}
   void setAngA(const Vector3dR& in) { ang_a_ = in;}
 
-#if 0
+  PoseState inv() const
+  {
+    PoseState result(*this);
+    result.getAngP() = ang_p_ * -1;
+
+    auto rot = R::from_rotvec(result.getAngP());
+
+    result.getLinP() = -rot.apply(result.getLinP());
+    result.getLinV() = -rot.apply(result.getLinV());
+    result.getLinA() = -rot.apply(result.getLinA());
+
+    result.getAngV() = -rot.apply(result.getAngV());
+    result.getAngA() = -rot.apply(result.getAngA());
+    return result;
+  }
+
   PoseState operator * (const PoseState& other) const
   {
     PoseState result;
-    result.setAngP((R::from_rotvec(getAngP()) * R::from_rotvec(other.getAngP())).as_rotvec());
+    auto rot = R::from_rotvec(getAngP());
+    result.getAngP() = (rot * R::from_rotvec(other.getAngP())).as_rotvec();
 
-    result.setLinP(R::from_rotvec(getAngP()).apply(other.getLinP()) + getLinP());
-    result.setLinV(R::from_rotvec(getAngP()).apply(other.getLinV()) + getLinV());
+    result.setLinP(rot.apply(other.getLinP()) + getLinP());
+    result.setLinV(rot.apply(other.getLinV()) + getLinV());
 
     return result;
   }
-#endif
 
   PoseState Propagate(double dt)
   {
@@ -253,6 +288,8 @@ PYBIND11_MODULE(rolling_shutter,m)
 {
   m.doc() = "pybind11 rolling_shutter plugin";
 
+  m.def("RollingShutterFuse", &RollingShutterFuse);
+
   py::class_<PoseState>(m, "PoseState")
   .def(
     py::init<
@@ -276,7 +313,8 @@ PYBIND11_MODULE(rolling_shutter,m)
   .def_property("ang_v", static_cast<GetterType>(&PoseState::getAngV), &PoseState::setAngV)
   .def_property("ang_a", static_cast<GetterType>(&PoseState::getAngA), &PoseState::setAngA)
 
-  // .def("Propagate", &PoseState::Propagate)
+  .def("inv", &PoseState::inv)
+  .def("__mul__", &PoseState::operator*)
   .def("PredictNeighbors", &PoseState::PredictNeighbors)
   .def("__str__", &PoseState::String)
   .def("__repr__", &PoseState::String);
