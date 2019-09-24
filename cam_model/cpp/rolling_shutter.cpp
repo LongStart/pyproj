@@ -18,6 +18,7 @@ using MatrixXdR = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::R
 
 using Vector2dR = Eigen::Matrix<double, 1, 2, Eigen::RowMajor>;
 using Vector3dR = Eigen::Matrix<double, 1, 3, Eigen::RowMajor>;
+using VectorXdR = Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>;
 
 class ScipyRotation
 {
@@ -35,7 +36,7 @@ class ScipyRotation
 
   ScipyRotation inv() const
   {
-    std::vector<Eigen::Quaterniond> quaternions; 
+    std::vector<Eigen::Quaterniond> quaternions;
     for(const auto& q : quaternions_)
       quaternions.emplace_back(q.inverse());
     return ScipyRotation(quaternions);
@@ -72,9 +73,20 @@ class ScipyRotation
   MatrixX3dR apply(const MatrixX3dR& rotvecs) const
   {
     MatrixX3dR result(rotvecs.rows(), 3);
-    for(int i = 0; i < rotvecs.rows(); i++)
+    if(quaternions_.size() == 1)
     {
-      result.row(i) = (quaternions_.at(i).toRotationMatrix() * rotvecs.row(i).transpose()).transpose();
+      for(int i = 0; i < rotvecs.rows(); i++)
+      {
+        result.row(i) = (quaternions_.at(0).toRotationMatrix() * rotvecs.row(i).transpose()).transpose();
+      }
+    }
+    else
+    {
+      assert(quaternions_.size() == rotvecs.rows());
+      for(int i = 0; i < rotvecs.rows(); i++)
+      {
+        result.row(i) = (quaternions_.at(i).toRotationMatrix() * rotvecs.row(i).transpose()).transpose();
+      }
     }
     return result;
   }
@@ -84,16 +96,16 @@ class ScipyRotation
   quaternions_(qs)
   {}
 
-  std::vector<Eigen::Quaterniond> quaternions_; 
+  std::vector<Eigen::Quaterniond> quaternions_;
 };
- 
+
 using R = ScipyRotation;
 using IdxPtsMap = std::map<int, std::vector<Vector2dR>>;
 #if 1
 void GetPointInROI(
-  const MatrixX2dR& points, 
-  const std::vector<double>& width_range, 
-  const std::vector<double>& height_range, 
+  const MatrixX2dR& points,
+  const std::vector<double>& width_range,
+  const std::vector<double>& height_range,
   IdxPtsMap& idx_pts_map,
   double point_size=0.4)
 {
@@ -102,9 +114,9 @@ void GetPointInROI(
 
   for(int i = 0; i < points.rows(); i++)
   {
-    if (width_range.at(0) - point_size < points(i, 0) 
-    && width_range.at(1) + point_size > points(i, 0) 
-    && height_range.at(0) - point_size < points(i, 1) 
+    if (width_range.at(0) - point_size < points(i, 0)
+    && width_range.at(1) + point_size > points(i, 0)
+    && height_range.at(0) - point_size < points(i, 1)
     && height_range.at(1) + point_size > points(i, 1))
     {
       if(idx_pts_map.count(i) == 0)
@@ -115,7 +127,7 @@ void GetPointInROI(
 }
 
 MatrixX2dR RollingShutterFuse(
-  const std::vector<MatrixX2dR>& points_by_frames, 
+  const std::vector<MatrixX2dR>& points_by_frames,
   int resolution_width)
 {
   IdxPtsMap idx_pts_map;
@@ -123,7 +135,7 @@ MatrixX2dR RollingShutterFuse(
   {
     GetPointInROI(points_by_frames.at(row_i), {0., 0. + resolution_width}, {row_i + 0., row_i + 1.}, idx_pts_map, 0.4);
   }
-    
+
 
   MatrixX2dR pts_uv(idx_pts_map.size(), 2);
 
@@ -134,6 +146,22 @@ MatrixX2dR RollingShutterFuse(
     Vector2dR mean = sum / idx_pts_pair.second.size();
     pts_uv.row(idx_pts_pair.first) = mean;
   }
+  return pts_uv;
+}
+
+MatrixX2dR PinholeProject(
+  const MatrixX3dR& pts_3d,
+  const Vector3dR& rotvec,
+  const Vector3dR& transvec,
+  const MatrixX3dR& cam_mat,
+  const VectorXdR& dist)
+{
+  MatrixX3dR pts_in_cam = R::from_rotvec(rotvec).apply(pts_3d).rowwise() + transvec;
+  // (K P^T)^T  = P K^T
+
+  MatrixX3dR pts_proj = ((pts_in_cam * cam_mat.transpose()));
+  MatrixX2dR pts_uv = (pts_proj.array().colwise() / pts_proj.array().col(2)).leftCols<2>();
+  // std::cout << "123: " << std::endl << pts_uv << std::endl;
   return pts_uv;
 }
 #endif
@@ -289,6 +317,8 @@ PYBIND11_MODULE(rolling_shutter,m)
   m.doc() = "pybind11 rolling_shutter plugin";
 
   m.def("RollingShutterFuse", &RollingShutterFuse);
+  m.def("PinholeProject", &PinholeProject);
+
 
   py::class_<PoseState>(m, "PoseState")
   .def(

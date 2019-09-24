@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from projection import *
 from random_pose_spline import *
-from pinhole_rollingshutter_cam import RollingShutterCamera
+from pinhole_rollingshutter_cam import *
 
 import cv2 as cv
 import sys
@@ -83,6 +83,12 @@ class CalibrationSampler(object):
 
     def ProjectedPoints(self):
         return np.array([self.camera.Project(self.board.Points(), cam_pose) for cam_pose in self.cam_states])
+        # pool = Pool(processes=16)
+        # pt_num = len(self.cam_states)
+        # # param = [(self.board.Points(), cam_pose, self.camera.resolution, self.camera.rolling_time, self.camera.model.intrinsic_mat, self.camera.model.distortion) for cam_pose in self.cam_states]
+        # pts = pool.map(
+        #     RollingShutterProject, param)
+        # return pts
 
     def BodyFramePoints(self):
         return np.array([self.board.BodyFramePoints()] * self.sample_num)
@@ -103,6 +109,7 @@ class CalibrationSampler(object):
     #     return pose
 
 if __name__ == "__main__":
+    import time
     sampler = CalibrationSampler(camera=RollingShutterCamera())
     # sampler = CalibrationSampler(camera=PinholeCamera())
     sampler.camera.model.distortion = np.array([0.2, -0.1, 0, 0, 2])
@@ -116,8 +123,12 @@ if __name__ == "__main__":
             tuple(sampler.camera.resolution[::-1]), None, None)
         print(dist)
 
+
     sampler.UpdateSample(60)
+    t = time.time()
     board_points = sampler.ProjectedPoints()
+    duration = time.time() - t
+    print("duration: {}".format(duration))
     print(board_points.shape)
 
     #animation
@@ -131,7 +142,7 @@ if __name__ == "__main__":
             plt.pause(1e-6)
 
     #3d plot
-    if 1:
+    if 0:
         fig = plt.figure()
         ax = fig.gca(projection='3d')
         ax.set_aspect('equal')
