@@ -13,6 +13,8 @@ import cv2 as cv
 from solver import Problem
 import matplotlib.cm as cm
 
+from pinhole_rollingshutter_cam import RollingShutterCamera
+
 class StateVector():
     def __init__(self, frame_num=0):
         self.frame_pose = np.zeros((frame_num, 2, 3))
@@ -281,6 +283,7 @@ if __name__ == "__main__":
     np.set_printoptions(precision=5, linewidth=np.inf)
 
     sampler = CalibrationSampler(sample_num=40, camera=PinholeCamera(model=RadTanPinhole(distortion=[0.2, -0.1, 0.1, 0.1, 2.])))
+    # sampler = CalibrationSampler(sample_num=40, camera=RollingShutterCamera(model=RadTanPinhole(distortion=[0.2, -0.1, 0.1, 0.1, 2.])))
 
     problem = PinholeCalibrationProblem(sampler.BodyFramePoints(), sampler.ProjectedPoints())
     problem.mask.mode = 'full'
