@@ -66,6 +66,7 @@ if __name__ == "__main__":
     # print(problem.jac(guess))
     # quit()
     result = problem.solve(problem.bsp.control_points, step=10)
+    quit()
     problem.bsp.control_points = result
     # res = least_squares(problem.residual, guess, jac=problem.jac, method='lm',verbose=2)
     # result = res.x

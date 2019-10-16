@@ -4,6 +4,7 @@ import numpy as np
 from scipy import interpolate
 
 def basis(degree, knot_vector, i, u):
+    # print("d: {}, i:{}, u:{}".format(degree, i, u))
     if 0 == degree :
         return np.array([float(knot_vector[i] <= v < knot_vector[i + 1]) for v in u])
 
@@ -28,8 +29,7 @@ def check_knot_vector(knot_vector, step=1.e-8):
             inc += step
             checked_vector[i] += inc
     return checked_vector
-            
-
+        
 
 class bspline(object):
     def __init__(self, degree, knot_vector, control_points):
@@ -100,12 +100,12 @@ if __name__ == "__main__":
     # control_points_x = (np.array([1.,1,1,1,1,1]))
     # control_points_y = (np.array([1.,5,6,5,1,2]))
     degree = 3
-    knot_vector = np.array([4,4,4,4,5,6,6,6,6])
+    knot_vector = np.array([4,4,4,4,5,6,7,7,7,7])
     # knot_vector = np.array([3,3,3,4,5,6,7,7,7])
     # knot_vector = np.array([0,0,3,4,5,6,7,10,10])
     # knot_vector = np.array([0,1,2,3,4,5,6,7,8])
-    control_points_x = (np.array([-2,2,1,7,3]))
-    control_points_y = (np.array([1,5,6,5,2]))
+    control_points_x = (np.array([-2,2,1,7,3,3]))
+    control_points_y = (np.array([1,5,6,5,2,3]))
     resolution = 200
     bx = bspline(degree, knot_vector, control_points_x)
     by = bspline(degree, knot_vector, control_points_y)
@@ -117,19 +117,23 @@ if __name__ == "__main__":
     
     xs = bx.cum_f(t)
     ys = by.cum_f(t)
-    # plt.figure()
-    # plt.grid(1)
-    # plt.plot(t, xs)
-    # for i in range(len(control_points_x)):
-    #     plt.plot(t, bx.basis_i(i, t))
-    # plt.figure()
-    # plt.grid(1)
-    # plt.plot(t, ys)
-    # for i in range(len(control_points_y)):
-    #     plt.plot(t, by.basis_i(i, t))
-    # plt.figure()
-    plt.plot(control_points_x, control_points_y, 'o-')
-    plt.plot(xs, ys)
-    plt.plot(sci_xs, sci_ys, '-.')
-    plt.grid(1)
+    if 0:
+        plt.figure()
+        plt.grid(1)
+        plt.plot(t, xs)
+        for i in range(len(control_points_x)):
+            plt.plot(t, bx.basis(i, t))
+    if 1:
+        plt.figure()
+        plt.grid(1)
+        for i in range(len(control_points_y)):
+            plt.plot(t, by.basis(i, t))
+        # plt.figure() 
+        
+    if 0:    
+        plt.plot(control_points_x, control_points_y, 'o-')
+        plt.plot(xs, ys)
+        plt.plot(sci_xs, sci_ys, '-.')
+        plt.grid(1)
+
     plt.show()

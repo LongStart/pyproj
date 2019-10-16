@@ -7,6 +7,7 @@ from solver import GaussNewton
 from solver import Problem
 from scipy.optimize import least_squares
 from bspline_utils import CreateUniformKnotVector
+import time
 
 class SO3BsplineFittingProblem(Problem):
     def __init__(self, bsp, ts, ys):
@@ -21,7 +22,7 @@ class SO3BsplineFittingProblem(Problem):
 
     def residual(self, x):
         rot_ys = R.from_quat(self.ys)
-        qs = R.from_rotvec(x.reshape(len(x)/3, 3)).as_quat()
+        qs = R.from_rotvec(x.reshape(int(len(x)/3), 3)).as_quat()
         rot_sp = R.from_quat(self.local_bsp(qs)(self.ts))
         return  np.hstack((rot_ys.inv() * rot_sp).as_rotvec())
 
@@ -57,27 +58,31 @@ if __name__ == "__main__":
     # sample_data = np.array([
     #     [1.,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
     #     [4.,5,6,3,2,4,6,6,4,5,6,4,4,5,3,4]])
-    sample_num = 20
+    sample_num = 15
     sample_data_t = np.array(range(sample_num))
     sample_data_p = R.from_rotvec([[0,0,.1 * i] for i in range(sample_num)]).as_quat()
     # knot_vec = CreateKnotVector1(3, [1.,2,3,5,7,9, 13, 15, 17, 18, 19])
-    knot_vec = CreateUniformKnotVector(3, 1, 19, 10)
+    knot_vec = CreateUniformKnotVector(3, 1, 14, 13)
     print(knot_vec)
     bsp = BSplineSO3(3, knot_vec, [1.]*(len(knot_vec) - 4))
     problem = SO3BsplineFittingProblem(bsp, sample_data_t, sample_data_p)
 
     guess = np.array([0, 0, 1.]*(len(knot_vec) - 4))
+    
     print(guess)
     # print('num jac')
     # print(problem.num_jac(guess))
     print('jac')
-    print(problem.jac(guess))
+    # print(problem.jac(guess))
     # quit()
     # result = GaussNewton(problem, guess, step = 5)
-    result = problem.solve(guess, step = 5)
+    t0 = time.time()
+    result = problem.solve(guess, step = 1, verbose=0)
+    print('t0 = {}'.format(time.time() - t0))
     # res = least_squares(problem.residual, guess, jac=problem.jac, method='lm',verbose=2)
     # result = res.x
     print(result)
+    t0 = time.time()
     problem.bsp.control_points = R.from_rotvec(result.reshape(-1,3)).as_quat()
 
     
@@ -90,4 +95,5 @@ if __name__ == "__main__":
         'q_bsp': problem.bsp.curve(100)}
     plotter = PlotCollection.PlotCollection("Multiple Wave")
     add_naxis_figure(plotter, "orientation", quat, markersize=5, fmt='.-')
+    print('t0 = {}'.format(time.time() - t0))
     plotter.show()

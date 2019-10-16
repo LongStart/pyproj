@@ -2,7 +2,7 @@ import PlotCollection
 import pylab as pl
 
 def check_signal_dict(signal_dict):
-    length = len(signal_dict.values()[0][0])
+    length = len(list(signal_dict.values())[0][0])
     for key in signal_dict:
         for i in range(1,len(signal_dict[key])):
             if len(signal_dict[key][0]) != len(signal_dict[key][i]):
@@ -28,7 +28,7 @@ def add_3axis_figure(plotter, plot_name, vec3d_dict, linewidth=1, fmt=''):
 def add_naxis_figure(plotter, plot_name, vecxd_dict, linewidth=1, fmt='', markersize=1.):
     fig = pl.figure()
     check_signal_dict(vecxd_dict)
-    signal_dim = len(vecxd_dict.values()[0]) - 1
+    signal_dim = len(list(vecxd_dict.values())[0]) - 1
     subplot_code = signal_dim * 100 + 11
     ax1 = fig.add_subplot(subplot_code)
     for i in range(0, signal_dim):
